@@ -1,0 +1,22 @@
+<Page class="page"
+    navigatingTo="onNavigatingTo" 
+    xmlns:DrawingPad="nativescript-drawingpad"
+    xmlns="http://schemas.nativescript.org/tns.xsd">
+    
+    <ActionBar class="action-bar">
+        <Label class="action-bar-title" text="Home"></Label>
+    </ActionBar>
+
+    <ScrollView>
+        <StackLayout>
+            <DrawingPad:DrawingPad backgroundColor="#ffffff" id="drawingPad" margin="10" height="350" penColor="{{ penColor }}" penWidth="{{ penWidth }}" />
+            
+            <Label text="{{ prediction }}" class="message" textWrap="true" row="0" col="1" />
+            <StackLayout orientation="horizontal">
+                <Button text="Predict" tap="{{ getMyDrawing }}" />
+                <Button text="Clear" tap="{{ clearMyDrawing }}" />
+            </StackLayout>
+            <Image src="{{ drawingImage }}" height="150" visibility="{{ drawingImage ? 'visible' : 'collapsed' }}" stretch="aspectFit" />
+        </StackLayout>
+    </ScrollView>
+</Page>
