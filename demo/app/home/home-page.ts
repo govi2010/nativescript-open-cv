@@ -1,8 +1,10 @@
-import { OpenCv } from 'nativescript-open-cv';
+import {
+    OpenCV
+} from 'nativescript-open-cv';
 import { android } from 'tns-core-modules/application';
 import { isAndroid, device } from 'tns-core-modules/platform';
 import { Color } from 'tns-core-modules/color';
-console.log(new OpenCv().message);
+// console.log(new OpenCv().message);
 /*
 In NativeScript, a file with the same name as an XML file is known as
 a code-behind file. The code-behind is a great place to place your view
