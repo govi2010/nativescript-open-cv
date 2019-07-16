@@ -1,10 +1,8 @@
-# Your Plugin Name
+# nativescript-open-cv  ![apple](https://cdn3.iconfinder.com/data/icons/picons-social/57/16-apple-32.png) ![android](https://cdn4.iconfinder.com/data/icons/logos-3/228/android-32.png)
+This plugin for using opencv latest version on android and ios.
+I have added limited method for my project but PR are welcomed.   
 
-Add your plugin badges here. See [nativescript-urlhandler](https://github.com/hypery2k/nativescript-urlhandler) for example.
 
-Then describe what's the purpose of your plugin. 
-
-In case you develop UI plugin, this is where you can add some screenshots.
 
 ## (Optional) Prerequisites / Requirements
 
@@ -15,7 +13,7 @@ Describe the prerequisites that the user need to have installed before using you
 Describe your plugin installation steps. Ideally it would be something like:
 
 ```javascript
-tns plugin add <your-plugin-name>
+tns plugin add nativescript-open-cv
 ```
 
 ## Usage 
