@@ -8,13 +8,25 @@
         "platforms": {
             "android": "5.4.0",
             "ios": "5.4.0"
-        }
+        },
+        "hooks": [
+            {
+                "type": "after-prepare",
+                "script": "after-prepare.js",
+                "inject": true
+            }
+        ]
+    },
+    "directories": {
+        "scripts": "scripts"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/govi2010/nativescript-open-cv.git"
     },
     "scripts": {
+        "postinstall": "node postinstall.js",
+        "preuninstall": "node preuninstall.js",
         "tsc": "npm i && tsc",
         "build": "npm run tsc && npm run build.native",
         "build.native": "node scripts/build-native.js",
@@ -23,7 +35,7 @@
         "plugin.tscwatch": "npm run tsc -- -w",
         "ci.tslint": "npm i && tslint '**/*.ts' --config '../tslint.json' --exclude '**/node_modules/**' --exclude '**/platforms/**'",
         "prepack": "npm run build.native",
-        "demo.ios": "npm run tsc && cd ../demo && tns run ios --emulator",
+        "demo.ios": "npm run tsc && cd ../demo && tns debug ios --emulator --debug-brk",
         "demo.android": "npm run tsc && cd ../demo && tns debug android --emulator --debug-brk",
         "demo.reset": "cd ../demo && npx rimraf -- hooks node_modules platforms package-lock.json",
         "plugin.prepare": "npm run build && cd ../demo && tns plugin remove nativescript-open-cv && tns plugin add ../src",
@@ -54,6 +66,8 @@
         "tslint": "^5.12.1",
         "semver": "^5.6.0"
     },
-    "dependencies": {},
+    "dependencies": {
+        "nativescript-hook": "0.2.4"
+    },
     "bootstrapper": "nativescript-plugin-seed"
 }

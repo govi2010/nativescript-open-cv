@@ -5,7 +5,6 @@
 #ifdef __OBJC__
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
-#import <QuartzCore/QuartzCore.h>
 #endif
 
 #import "CvCameraPreview.h"
@@ -70,43 +69,33 @@
 
 - (void)processImage:(cv::Mat&)image
 {
-  CFTimeInterval startTime = CACurrentMediaTime();
-  CFTimeInterval realstartTime = startTime;
 //  cv::Size size = image.size();
-//
+//  
 //  double ratio = size.height / 500.0f;
+//  // const ratio = 1;
 //  int height = round(size.height / ratio);
 //  int width = round(size.width / ratio);
-//
+//  
 //  cv::Mat resizedImage(height, width, CV_8UC4);
 //  cv::Mat grayImage(height, width, CV_8UC4);
 //  cv::Mat cannedImage(height, width, CV_8UC1);
-//  NSLog(@"mats init %f", CACurrentMediaTime() - startTime);
-//  startTime = CACurrentMediaTime();
+//  // console.log('testImage4', cannedImage.size());
+//  
 //  cv::resize(image, resizedImage, cv::Size(width, height));
-//  NSLog(@"resize duration %f", CACurrentMediaTime() - startTime);
-//  startTime = CACurrentMediaTime();
 //  cv::cvtColor(resizedImage, grayImage, cv::COLOR_RGBA2GRAY);
-//  NSLog(@"cvtColor duration %f", CACurrentMediaTime() - startTime);
-//  startTime = CACurrentMediaTime();
 //  cv::GaussianBlur(grayImage, grayImage, cv::Size(5, 5), 0);
-//  NSLog(@"GaussianBlur duration %f", CACurrentMediaTime() - startTime);
-//  startTime = CACurrentMediaTime();
 //  cv::Canny(grayImage, cannedImage, 75, 200);
-//  NSLog(@"Canny duration %f", CACurrentMediaTime() - startTime);
-//  startTime = CACurrentMediaTime();
+//  // console.log('testImage5', cannedImage.size());
 //  std::vector<std::vector<cv::Point>> contours;
 //  cv::Mat hierarchy;
 //  cv::findContours(cannedImage, contours, hierarchy, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
-//  NSLog(@"findContours duration %f", CACurrentMediaTime() - startTime);
 //  for( int a = 0; a < contours.size(); a = a + 1 ) {
 //    cv::drawContours(image,  contours, a, cv::Scalar(255,0,0));
 //  }
 
   if (self.delegate) {
-    [self.delegate processOpenCVMat:[[OpenCVMat alloc] initWithMat:image]];
+    OpenCVMat* mat = [[OpenCVMat alloc] initWithMat:image];
+    [self.delegate processOpenCVMat:(id)mat];
   }
-  
-  NSLog(@"processImage duration %f", CACurrentMediaTime() - realstartTime);
 }
 @end

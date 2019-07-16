@@ -13,7 +13,7 @@ import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
-import android.hardware.Camera.PreviewCallback;a
+import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -22,7 +22,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import org.bytedeco.opencv_core.Mat;
+import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.FFmpegFrameFilter;
 import org.bytedeco.javacv.Frame;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import static org.bytedeco.avutil.AV_PIX_FMT_NV21;
+import static org.bytedeco.ffmpeg.global.avutil.AV_PIX_FMT_NV21;
 
 /**
  * This is the graphical object used to display a real-time preview of the Camera.

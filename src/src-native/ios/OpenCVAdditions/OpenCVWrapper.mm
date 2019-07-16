@@ -12,73 +12,26 @@
 #import <UIKit/UIKit.h>
 
 
-@implementation ContoursVector
-{
-  std::vector<std::vector<cv::Point>> _vector;
-}
-//- (id)initWithVector:(std::vector< std::vector<cv::Point> >&) vector {
-//  self = [super init];
-//
-//  if (self) {
-//    _vector = &vector;
-//  }
-//
-//  return self;
-//}
+@implementation OpenCVWrapper : NSObject
 
-
--(std::vector<std::vector<cv::Point>>*)vector {
-  return &_vector;
-}
-
-//-(void)dealloc {
-////  delete _vector;
-//  _vector = NULL;
-//  //  delete _mat;
-//}
-
--(int)size {
-  return (int)_vector.size();
-}
--(NSDictionary*)get:(int)i :(int)j {
-  cv::Point point = _vector.at(i).at(j);
-  return @{@"x":@(point.x) , @"y":@(point.y)};
-}
-
--(double)contourArea:(int)index :(BOOL)oriented {
-  return cv::contourArea(_vector.at(index), oriented);
-}
-
-
-@end
-
-@implementation OpenCVWrapper
 
 +(void)cvtColor: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)colorType :(int)dstChannels {
-  CFTimeInterval startTime = CACurrentMediaTime();
   cv::cvtColor(*mat1.mat, *mat2.mat, colorType, dstChannels);
-  NSLog(@"cvtColor duration %f", CACurrentMediaTime() - startTime);
 }
 //+(void)cvtColor: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)colorType {
 //  cv::cvtColor(*mat1.mat, *mat2.mat, colorType, 0);
 //}
 
 +(void)GaussianBlur: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)x :(int)y :(int)sigmaX {
-  CFTimeInterval startTime = CACurrentMediaTime();
- cv::GaussianBlur(*mat1.mat, *mat2.mat, cv::Size(x, y), sigmaX);
-  NSLog(@"GaussianBlur duration %f", CACurrentMediaTime() - startTime);
+  cv::GaussianBlur(*mat1.mat, *mat2.mat, cv::Size(x, y), sigmaX);
 }
 
 +(void)resize: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)x :(int)y {
-  CFTimeInterval startTime = CACurrentMediaTime();
   cv::resize(*mat1.mat, *mat2.mat, cv::Size(x, y));
-  NSLog(@"resize duration %f", CACurrentMediaTime() - startTime);
 }
 
 +(void)Canny: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(double)threshold1 :(double)threshold2 :(int)apertureSize :(BOOL)L2gradient {
-  CFTimeInterval startTime = CACurrentMediaTime();
- cv::Canny(*mat1.mat, *mat2.mat, threshold1, threshold2, apertureSize, L2gradient);
-  NSLog(@"Canny duration %f", CACurrentMediaTime() - startTime);
+  cv::Canny(*mat1.mat, *mat2.mat, threshold1, threshold2, apertureSize, L2gradient);
 }
 +(double)contourArea:(NSArray*)contour :(BOOL)oriented {
   __block std::vector<cv::Point> vector;
@@ -88,24 +41,19 @@
   return cv::contourArea(vector);
 }
 
-+(ContoursVector*)findContours: (OpenCVMat*)mat1 :(OpenCVMat*)hierarchy :(int)mode :(int)method :(CGPoint)offset {
-  CFTimeInterval startTime = CACurrentMediaTime();
-  ContoursVector* result = [[ContoursVector alloc] init];
-  std::vector<std::vector<cv::Point>>* vector = result.vector;
-  cv::findContours(*mat1.mat, *vector, *hierarchy.mat, mode, method, cv::Point(offset.x, offset.y));
-  NSLog(@"findContours duration %f", CACurrentMediaTime() - startTime);
-  return result;
-//  NSLog(@"findContours1 duration %f", CACurrentMediaTime() - startTime);
-//  for(auto const& value: vectors) {
-//    if (value.size() > 0) {
-//      NSMutableArray* subArray = [NSMutableArray array];
-//      for(auto const& subvalue: value) {
-//          [subArray addObject:@{@"x":@(subvalue.x) , @"y":@(subvalue.y)}];
-//      }
-//      [contours addObject:subArray];
-//    }
-//  }
-//  vectors.clear();
++(void)findContours: (OpenCVMat*)mat1 :(NSMutableArray*)contours :(OpenCVMat*)hierarchy :(int)mode :(int)method :(CGPoint)offset {
+  std::vector<std::vector<cv::Point>> vectors;
+  cv::findContours(*mat1.mat, vectors, *hierarchy.mat, mode, method, cv::Point(offset.x, offset.y));
+  for(auto const& value: vectors) {
+    if (value.size() > 0) {
+      NSMutableArray* subArray = [NSMutableArray array];
+      for(auto const& subvalue: value) {
+          [subArray addObject:@{@"x":@(subvalue.x) , @"y":@(subvalue.y)}];
+      }
+      [contours addObject:subArray];
+    }
+  }
+  vectors.clear();
 }
 
 
@@ -197,16 +145,15 @@
     return finalImage;
 }
 
-+(void)drawContours:(OpenCVMat*)mat :(ContoursVector*)contours :(int)contourIdx :(UIColor*)color :(int)thickness :(int)lineType :(OpenCVMat*) hierarchy :(int) maxLevel :(NSDictionary*) offset {
-  CFTimeInterval startTime = CACurrentMediaTime();
-//  std::vector<std::vector<cv::Point>> vectors;
-//  for (NSArray* obj in contours) {
-//    std::vector<cv::Point> vector;
-//    for (NSDictionary* obj2 in obj) {
-//      vector.push_back(cv::Point([[obj2 valueForKey:@"x"] intValue], [[obj2 valueForKey:@"y"] intValue]));
-//    }
-//    vectors.push_back(vector);
-//  }
++(void)drawContours:(OpenCVMat*)mat :(NSArray*)contours :(int)contourIdx :(UIColor*)color :(int)thickness :(int)lineType :(OpenCVMat*) hierarchy :(int) maxLevel :(NSDictionary*) offset {
+  std::vector<std::vector<cv::Point>> vectors;
+  for (NSArray* obj in contours) {
+    std::vector<cv::Point> vector;
+    for (NSDictionary* obj2 in obj) {
+      vector.push_back(cv::Point([[obj2 valueForKey:@"x"] intValue], [[obj2 valueForKey:@"y"] intValue]));
+    }
+    vectors.push_back(vector);
+  }
 //  [contours enumerateObjectsUsingBlock:^(NSArray*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
 //    __block std::vector<cv::Point> vector;
 //    [obj enumerateObjectsUsingBlock:^(NSValue*  _Nonnull obj2, NSUInteger idx, BOOL * _Nonnull stop) {
@@ -217,10 +164,6 @@
   const CGFloat* components = CGColorGetComponents(color.CGColor);
   cv::Scalar cvColor(components[0]*255, components[1]*255, components[2]*255, components[3]*255);
   cv::Point cvOffset([[offset valueForKey:@"x"] floatValue], [[offset valueForKey:@"y"] floatValue]);
-  
-  std::vector<std::vector<cv::Point>>* vector = contours.vector;
-  int count = (int)vector->size();
-  cv::drawContours(*mat.mat, *vector, contourIdx, cvColor, thickness, lineType, hierarchy? *hierarchy.mat : cv::noArray(), maxLevel, cvOffset);
-  NSLog(@"drawContours duration %f", CACurrentMediaTime() - startTime);
+  cv::drawContours(*mat.mat, vectors, contourIdx, cvColor, thickness, lineType, hierarchy? *hierarchy.mat : cv::noArray(), maxLevel, cvOffset);
 }
 @end

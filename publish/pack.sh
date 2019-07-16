@@ -19,7 +19,7 @@ pack() {
     # copy src
     echo 'Copying src...'
     node_modules/.bin/ncp "$SOURCE_DIR" "$TO_SOURCE_DIR"
-
+    node_modules/.bin/rimraf "$TO_SOURCE_DIR"/src-native
     # copy README & LICENSE to src
     echo 'Copying README and LICENSE to /src...'
     node_modules/.bin/ncp "$ROOT_DIR"/LICENSE "$TO_SOURCE_DIR"/LICENSE
