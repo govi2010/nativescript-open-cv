@@ -1,0 +1,98 @@
+
+apply plugin: 'com.android.library'
+
+def computeCompileSdkVersion () {
+    if(project.hasProperty("compileSdk")) {
+        return compileSdk
+    }
+    else {
+        return 28
+    }
+}
+
+def computeBuildToolsVersion() {
+    if(project.hasProperty("buildToolsVersion")) {
+        return buildToolsVersion
+    }
+    else {
+        return "28.0.3"
+    }
+}
+
+def computeSupportVersion() {
+    if(project.hasProperty("supportVersion")) {
+        return supportVersion
+    }
+    else {
+        return "28.0.0"
+    }
+}
+
+def computeTargetSdkVersion() {
+    if(project.hasProperty("targetSdk")) {
+        return targetSdk
+    }
+    else {
+        return 28
+    }
+}
+
+android {
+    compileSdkVersion computeCompileSdkVersion()
+    buildToolsVersion computeBuildToolsVersion()
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion computeTargetSdkVersion()
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // MY PREBUILD TASK
+    task PreBuild {
+        println "MY PRE-BUILD TASK"
+    }
+
+    // MY POSTBUILD TASK
+    gradle.buildFinished {
+        println "MY POST_BUILD TASK"
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation group: 'org.bytedeco', name: 'javacv', version: '1.5.1'
+    implementation group: 'org.bytedeco', name: 'opencv', version: '4.1.0-1.5.1'
+}
+
+task cleanBuildDir (type: Delete) {
+    delete "../build/"
+}
+
+
+
+task finalizeBuild {
+    doLast {
+        copy {
+            from "build/outputs/aar/opencv-additions-release.aar"
+            into "../../../platforms/android/"
+        }
+    }
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+        task.finalizedBy finalizeBuild
+    }
+}
+
+//assemble.dependsOn(cleanBuildDir)
+//copyAar.dependsOn(assemble)
+//build.dependsOn(copyAar)
