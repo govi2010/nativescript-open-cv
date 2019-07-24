@@ -1,65 +1,101 @@
 import {CommanOpenCV} from './open-cv.common';
+import {ImageSource} from "tns-core-modules/image-source";
 
-export class OpenCv extends CommanOpenCV {
+declare var OpenCVWrapper: any;
+declare var OpenCVMat: any, OPENCV_8UC4;
+
+export class OpenCV extends CommanOpenCV {
     constructor() {
         super();
         // debugger;
 
     }
 
-    cvtColor(srcMat: any, destMat: any, dstChannels: number): void {
-        // throw new Error("Method not implemented.");
+    cvtColor(srcMat: any, destMat: any, colortype: number): void {
+        // let dest = OpenCVMat.alloc().initWithRowsColsType(srcMat.size().height, srcMat.size().width, OPENCV_8UC4);
+        OpenCVWrapper.cvtColor(srcMat, destMat, colortype, 0);
+        // return dest;
+    }
+
+    extractChannel(srcMat: any, destMat: any): void {
+        // let dest = OpenCVMat.alloc().initWithRowsColsType(srcMat.size().height, srcMat.size().width, OPENCV_8UC4);
+        OpenCVWrapper.extractChannel(srcMat, destMat);
+        // return dest;
     }
 
     MatToImage(srcMat: any) {
-        // throw new Error("Method not implemented.");
+        // debugger;
+        return srcMat.toImage();
     }
 
     ImageToMat(bitMapImage: any) {
-        // throw new Error("Method not implemented.");
+        // debugger;
+        if (bitMapImage instanceof ImageSource) {
+            // console.log('imread', 'ImageSource');
+            bitMapImage = bitMapImage.ios;
+        }
+        if (bitMapImage instanceof UIImage) {
+            // const cvMat = OpenCVWrapper.cvMatFromUIImage(value);
+            // console.log('imread', 'UIImage', value.size);
+            return OpenCVMat.alloc().initWithImage(bitMapImage);
+        }
+        return null;
     }
 
     bitwise_not(srcMat: any, destMat: any): void {
         // throw new Error("Method not implemented.");
+        // debugger;
+        return OpenCVWrapper.bitwise_not(srcMat, destMat);
     }
 
     GaussianBlur(srcMat: any, destMat: any, size: any, x: number, y: number, sigmaX: number): void {
-        // throw new Error("Method not implemented.");
+        // debugger;
+        return OpenCVWrapper.GaussianBlur(srcMat, destMat, x, y, sigmaX);
     }
 
     adaptiveThreshold(srcMat: any, destMat: any, maxValue: number, adaptiveMethod: number, thresholdType: number, blockSize: number, C: number): void {
-        // throw new Error("Method not implemented.");
+        // debugger;
+        return OpenCVWrapper.adaptiveThreshold(srcMat, destMat, maxValue, adaptiveMethod, thresholdType, blockSize, C);
     }
 
     CreateMat() {
-        // throw new Error("Method not implemented.");
+        // debugger;
+        return new OpenCVMat()
     }
 
 
     CreateMatFromRect(srcMat: any, rect: any) {
-        // throw new Error("Method not implemented.");
+        // debugger;
+        // const result = srcMat.initWithMatWithRect(rect);
+        return null;
     }
 
     CreateMat_Color(rows: number, cols: number, imageType: any, color: any) {
-        // throw new Error("Method not implemented.");
+        const result = OpenCVMat.alloc().initWithRowsColsType(rows, cols, imageType);
+        debugger;
+        // console.log('createMat', rows, cols, type, result.size().width, result.size().height);
+        return result;
     }
 
     CreateMatVector() {
-        // throw new Error("Method not implemented.");
+        return new OpenCVMat();
     }
 
-    findContours(srcMat: any, contoursMatVector: any, hierarchyMat: any, mode: number, method: number): void {
-        // throw new Error("Method not implemented.");
+    findContours(srcMat: any, contoursMatVector: any, hierarchyMat: any, mode: number, method: number, offset: { x: number, y: number } = {
+        x: 0,
+        y: 0
+    }): void {
+        return OpenCVWrapper.findContours(srcMat, hierarchyMat, mode, method, offset);
     }
 
     contourArea(contours: any): number {
         // throw new Error("Method not implemented.");
-        return 0;
+        return OpenCVWrapper.contourArea(contours, false);
     }
 
 
     boundingRect(contours: any) {
-        // throw new Error("Method not implemented.");
+        return OpenCVWrapper.boundingRect(contours);
     }
 
     CreateRange(start: number, end: number) {

@@ -23,7 +23,12 @@
 - (CGSize) size;
 -(void)releaseMat;
 -(UIImage*)toImage;
+-(UIImage*)to28X28Image;
+-(NSArray*)toAll28X28Image;
 -(void)setTo:(UIColor*)color;
 -(OpenCVMat*)clone;
+-(NSComparisonResult)compare:(NSDictionary *)otherObject;
 @end
+
+
 

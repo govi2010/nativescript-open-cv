@@ -102,6 +102,9 @@ export class OpenCV extends CommanOpenCV {
     resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: InterpolationFlags): void {
         org.bytedeco.opencv.global.opencv_imgproc.resize(srcMat, destMat, size, x, y, method);
     }
+
+    extractChannel(srcMat: any, destMat: any): void {
+    }
 }
 
 

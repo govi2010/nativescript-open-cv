@@ -110,19 +110,31 @@ enum
   OPENCV_64FC2 = CV_64FC2,
   OPENCV_64FC3 = CV_64FC3
 };
+@interface ContoursVector : NSObject
 
+//-(id)initWithVector:(std::vector<std::vector<cv::Point>> &) vector;
+-(int)size;
+-(std::vector<std::vector<cv::Point>>*)vector;
+-(NSDictionary*)get:(int)i :(int)j;
+-(NSArray*)getCountour:(int)i;
+-(double)contourArea:(int)index :(BOOL)oriented;
+-(OpenCVMat*)GetMat:(int)index :(OpenCVMat*)mat2;
+@end
 @interface OpenCVWrapper : NSObject
-
++(void)extractChannel: (OpenCVMat*)mat1 :(OpenCVMat*)mat2;
 +(void)cvtColor: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)colorType :(int)dstChannels;
-//+(void)cvtColor: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)colorType;
++(void)bitwise_not:(OpenCVMat*)mat1 :(OpenCVMat*)mat2;
 +(void)GaussianBlur: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)x :(int)y :(int)sigmaX;
++(void)adaptiveThreshold: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)maxValue :(int)adaptiveMethod :(int)thresholdType :(int)blockSize :(int)C;
 +(void)resize: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)x :(int)y;
 +(void)Canny: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(double)threshold1 :(double)threshold2 :(int)apertureSize :(BOOL)L2gradient;
-+(void)findContours: (OpenCVMat*)mat1 :(NSMutableArray*)contours :(OpenCVMat*)hierarchy :(int)mode :(int)method :(CGPoint)offset;
++(ContoursVector*)findContours: (OpenCVMat*)mat1 :(OpenCVMat*)hierarchy :(int)mode :(int)method :(CGPoint)offset;
 + (cv::Mat*)cvMatFromUIImage:(UIImage *)image;
 + (cv::Mat*)cvMatGrayFromUIImage:(UIImage *)image;
-+ (UIImage *)UIImageFromCVMat:(cv::Mat&)cvMat;
++ (UIImage *)UIImageFromCVMat:(cv::Mat)cvMat;
 +(double)contourArea:(NSArray*)contour :(BOOL)oriented;
++(NSDictionary*)boundingRect:(NSArray*)contour;
 +(void)drawContours:(OpenCVMat*)mat :(NSArray*)contours :(int)contourIdx :(UIColor*)color :(int)thickness :(int)lineType :(OpenCVMat*) hierarchy :(int) maxLevel :(NSDictionary*) offset;
 @end
+
 

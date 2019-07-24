@@ -11,19 +11,79 @@
 #import "OpenCVWrapper.h"
 #import <UIKit/UIKit.h>
 
+@implementation ContoursVector
+{
+std::vector<std::vector<cv::Point>> _vector;
+}
+-(std::vector<std::vector<cv::Point>>*)vector {
+    return &_vector;
+}
+
+//-(void)dealloc {
+////  delete _vector;
+//  _vector = NULL;
+//  //  delete _mat;
+//}
+
+-(int)size {
+return (int)_vector.size();
+}
+-(NSDictionary*)get:(int)i :(int)j {
+    cv::Point point = _vector.at(i).at(j);
+    return @{@"x":@(point.x) , @"y":@(point.y)};
+}
+
+-(NSArray*)getCountour:(int)i {
+    std::vector<cv::Point> points = _vector[i];
+    NSMutableArray *array = [[NSMutableArray alloc] initWithCapacity:points.size()];
+    
+    for( unsigned int i = 0; i < points.size(); i++){
+        cv::Point point = points[i];
+        [array addObject:@{@"x":@(point.x) , @"y":@(point.y)}];
+    }
+    return [[NSArray alloc] initWithArray:array];
+}
+
+-(double)contourArea:(int)index :(BOOL)oriented {
+    return cv::contourArea(_vector.at(index), oriented);
+}
+
+-(NSDictionary*)boundingRect:(int)index  {
+    cv::Rect c= cv::boundingRect(_vector.at(index));
+    return @{@"x":@(c.x) , @"y":@(c.y),@"height":@(c.height),@"width":@(c.width)};
+}
+
+-(OpenCVMat*)GetMat:(int)index :(OpenCVMat*)mat2 {
+    cv::Mat(*mat2.mat, cv::boundingRect(_vector.at(index)));
+    cv::Mat matcv  =cv::Mat(*mat2.mat, cv::boundingRect(_vector.at(index)));
+    OpenCVMat* mat = [[OpenCVMat alloc] initWithMat:matcv];
+    return mat;
+}
+
+
+@end
+
 
 @implementation OpenCVWrapper : NSObject
 
++(void)extractChannel: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 {
+    cv::extractChannel(*mat1.mat, *mat2.mat, 3);
+}
 
 +(void)cvtColor: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)colorType :(int)dstChannels {
-  cv::cvtColor(*mat1.mat, *mat2.mat, colorType, dstChannels);
+  cv::cvtColor(*mat1.mat, *mat2.mat, colorType,dstChannels);
 }
-//+(void)cvtColor: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)colorType {
-//  cv::cvtColor(*mat1.mat, *mat2.mat, colorType, 0);
-//}
 
 +(void)GaussianBlur: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)x :(int)y :(int)sigmaX {
   cv::GaussianBlur(*mat1.mat, *mat2.mat, cv::Size(x, y), sigmaX);
+}
+
++(void)adaptiveThreshold: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)maxValue :(int)adaptiveMethod :(int)thresholdType :(int)blockSize :(int)C {
+    cv::adaptiveThreshold(*mat1.mat, *mat2.mat, maxValue, adaptiveMethod,thresholdType,blockSize,C);
+}
+
++(void)bitwise_not: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 {
+  cv::bitwise_not(*mat1.mat, *mat2.mat);
 }
 
 +(void)resize: (OpenCVMat*)mat1 :(OpenCVMat*)mat2 :(int)x :(int)y {
@@ -41,30 +101,41 @@
   return cv::contourArea(vector);
 }
 
-+(void)findContours: (OpenCVMat*)mat1 :(NSMutableArray*)contours :(OpenCVMat*)hierarchy :(int)mode :(int)method :(CGPoint)offset {
-  std::vector<std::vector<cv::Point>> vectors;
-  cv::findContours(*mat1.mat, vectors, *hierarchy.mat, mode, method, cv::Point(offset.x, offset.y));
-  for(auto const& value: vectors) {
-    if (value.size() > 0) {
-      NSMutableArray* subArray = [NSMutableArray array];
-      for(auto const& subvalue: value) {
-          [subArray addObject:@{@"x":@(subvalue.x) , @"y":@(subvalue.y)}];
-      }
-      [contours addObject:subArray];
-    }
-  }
-  vectors.clear();
++(NSDictionary*)boundingRect:(NSArray*)contour{
+    
+    __block std::vector<cv::Point> vector;
+    [contour enumerateObjectsUsingBlock:^(NSDictionary*  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        NSLog(@"x %d", [[obj valueForKey:@"x"] intValue]);
+        NSLog(@"y %d", [[obj valueForKey:@"y"] intValue]);
+        vector.push_back(cv::Point([[obj valueForKey:@"x"] intValue], [[obj valueForKey:@"y"] intValue]));
+    
+    }];
+    
+    cv::Rect c =  cv::boundingRect(vector);
+    return @{@"x":@(c.x) , @"y":@(c.y),@"height":@(c.height),@"width":@(c.width)};
+}
+
++(ContoursVector*)findContours: (OpenCVMat*)mat1 :(OpenCVMat*)hierarchy :(int)mode :(int)method :(CGPoint)offset {
+//    mat1.mat(cv::Range(3,4),cv::Range(3,4))
+//    mat1.mat()(cv::Range(0, 10), cv::Range::all());
+    CFTimeInterval startTime = CACurrentMediaTime();
+    ContoursVector* result = [[ContoursVector alloc] init];
+    std::vector<std::vector<cv::Point>>* vector = result.vector;
+    cv::findContours(*mat1.mat, *vector, *hierarchy.mat, mode, method, cv::Point(offset.x, offset.y));
+    NSLog(@"findContours duration %f", CACurrentMediaTime() - startTime);
+    
+    return result;
 }
 
 
 + (cv::Mat*)cvMatFromUIImage:(UIImage *)image
 {
-//  NSLog(@"cvMatFromUIImage");
+  NSLog(@"cvMatFromUIImage");
     CGColorSpaceRef colorSpace = CGImageGetColorSpace(image.CGImage);
     CGFloat cols = image.size.width;
     CGFloat rows = image.size.height;
-//    NSLog(@"cols %f", cols);
-//    NSLog(@"rows %f", rows);
+    NSLog(@"cols %f", cols);
+    NSLog(@"rows %f", rows);
 
     cv::Mat* cvMat = new cv::Mat(rows, cols, CV_8UC4); // 8 bits per component, 4 channels (color channels + alpha)
     
@@ -105,8 +176,9 @@
 }
 
 
-+ (UIImage *)UIImageFromCVMat:(cv::Mat&)cvMat
++ (UIImage *)UIImageFromCVMat:(cv::Mat)cvMat
 {
+     NSLog(@"initWithImage2 %d %d", cvMat.cols, cvMat.rows);
     NSData *data = [NSData dataWithBytes:cvMat.data length:cvMat.elemSize()*cvMat.total()];
     CGColorSpaceRef colorSpace;
     
@@ -120,7 +192,7 @@
   // Preserve alpha transparency, if exists
     bool alpha = cvMat.channels() == 4;
     CGBitmapInfo bitmapInfo = (alpha ? kCGImageAlphaLast : kCGImageAlphaNone) | kCGBitmapByteOrderDefault;
-
+   
     // Creating CGImage from cv::Mat
     CGImageRef imageRef = CGImageCreate(cvMat.cols,                                 //width
                                         cvMat.rows,                                 //height

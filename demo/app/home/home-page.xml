@@ -16,7 +16,17 @@
                 <Button text="Predict" tap="{{ getMyDrawing }}" />
                 <Button text="Clear" tap="{{ clearMyDrawing }}" />
             </StackLayout>
-            <Image src="{{ drawingImage }}" height="150" visibility="{{ drawingImage ? 'visible' : 'collapsed' }}" stretch="aspectFit" />
+            <ScrollView orientation="horizontal">
+                <Repeater id="repeaterObj"  items="{{drawingImage}}">
+                    <Repeater.itemsLayout>
+                        <StackLayout orientation="horizontal" />
+                    </Repeater.itemsLayout>
+                    <Repeater.itemTemplate >
+                        <Image class="picture-stack" stretch="aspectFit" src="{{$value}}" height="100" style="margin: 10"  />
+                    </Repeater.itemTemplate>
+                </Repeater>
+            </ScrollView>
+            <!--<Image src="{{ drawingImage }}" height="150" visibility="{{ drawingImage ? 'visible' : 'collapsed' }}" stretch="aspectFit" />-->
         </StackLayout>
     </ScrollView>
 </Page>
