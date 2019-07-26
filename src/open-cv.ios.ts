@@ -1,5 +1,7 @@
 import {CommanOpenCV} from './open-cv.common';
-import {ImageSource} from "tns-core-modules/image-source";
+import {fromNativeSource, ImageSource} from "tns-core-modules/image-source";
+import {ios} from "tns-core-modules/utils/utils";
+import nsArrayToJSArray = ios.collections.nsArrayToJSArray;
 
 declare var OpenCVWrapper: any;
 declare var OpenCVMat: any, OPENCV_8UC4;
@@ -104,6 +106,12 @@ export class OpenCV extends CommanOpenCV {
 
     resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: number): void {
         // throw new Error("Method not implemented.");
+    }
+
+    toAll28X28Image(res: any): ImageSource[] {
+        let main_image = this.ImageToMat(res);
+        let nsarray = main_image.toAll28X28Image();
+        return nsArrayToJSArray(nsarray).map(p => fromNativeSource(p));
     }
 
 

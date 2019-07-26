@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -e
 set -o pipefail
 
@@ -13,7 +14,7 @@ BUILD_OUTPUT_DIR="$ANDROID_SOURCE_DIR/$PROJECT_NAME/build/outputs/aar/"
 PLUGIN_TARGET_DIR="$CURRENT_DIR/../../platforms"
 PLUGIN_TARGET_SUBDIR="$PLUGIN_TARGET_DIR/android"
 
-#cd $ANDROID_SOURCE_DIR
+cd $ANDROID_SOURCE_DIR
 
 ./gradlew clean assembleRelease
 

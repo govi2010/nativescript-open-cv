@@ -158,46 +158,21 @@
 -(NSArray*)toAll28X28Image{
     cv::Mat matInput;
     (_mat).copyTo(matInput);
-    NSLog(@"start : extractChannel");
     cv::cvtColor(matInput,matInput,cv::COLOR_BGR2GRAY);
-    NSLog(@"end : extractChannel");
-    NSLog(@"start : cvtColor");
     cv::cvtColor(matInput,matInput,cv::COLOR_RGB2BGR);
-    NSLog(@"end : cvtColor");
-    
-    NSLog(@"start : bitwise_not");
     cv::bitwise_not(matInput, matInput);
-    NSLog(@"end : bitwise_not");
-    
-    NSLog(@"start : orig_image");
     cv::Mat orig_image;
     matInput.copyTo(orig_image);
-    NSLog(@"end : orig_image");
-    
-    NSLog(@"start : cvtColor2");
     cv::cvtColor(matInput,matInput,cv::COLOR_BGR2GRAY);
-    NSLog(@"end : cvtColor2");
-    
-    NSLog(@"start : GaussianBlur");
     cv::GaussianBlur(matInput, matInput, cv::Size(5, 5), cv::BORDER_DEFAULT);
-    NSLog(@"end : GaussianBlur");
-    
-    NSLog(@"start : adaptiveThreshold");
     //        cv::adaptiveThreshold(matInput, matInput, 125, cv::ADAPTIVE_THRESH_MEAN_C,cv::THRESH_BINARY_INV,11,12);
     cv::threshold(matInput, matInput, 0,255, cv::THRESH_OTSU);
-    NSLog(@"end : adaptiveThreshold");
-    
     cv::Mat rect_kernel =  cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 20));
     cv::dilate(matInput,matInput, rect_kernel);
-    NSLog(@"start : hierarchy");
-    NSLog(@"end : hierarchy");
-    NSLog(@"start : crete contours");
     std::vector<std::vector<cv::Point>> contours;
     NSMutableArray *d = [[NSMutableArray alloc] init];
     std::vector<cv::Vec4i> hierarchy;
-    
     cv::findContours(matInput, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE, cv::Point(0, 0));
-    NSLog(@"end : find contours");
     std::vector<Point> approx;
     for (size_t i = 0; i < contours.size(); i++)
     {
@@ -206,16 +181,7 @@
         int area= cv::contourArea(contour);
         [d addObject:@{@"x":@(roi.x),@"y": @(roi.y) , @"width": @(roi.width) , @"height" :@(roi.height) , @"area":@(area), @"i":@(i) }];
     }
-//    cv::Mat img =(cv::Mat_<uchar>(3, 4) << 0 , 1 , 2 , 3 , 10 , 11 , 12 , 13 , 20 , 21 , 22 , 23);
-//    cv::Mat a=cv::Mat(3, 4, CV_8UC1, cv::Scalar(0));
-//    cv::Mat b=cv::Mat(3, 4, CV_8UC1, cv::Scalar(0));
-//
-//    img.copyTo(a);
-//    std::cout << "a = " << a << std::endl;
-//    img(cv::Range(0,2),cv::Range(1,3)).copyTo(b(cv::Range(0, 2), cv::Range(1, 3)));
-//    std::cout << "b = " << b << std::endl;
-    
-    NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"x" ascending:NO];
+    NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"x" ascending:YES];
     NSArray *sortedArray = [d sortedArrayUsingDescriptors:@[descriptor]];
     NSMutableArray *images = [[NSMutableArray alloc] init];
     for (NSDictionary * roiFinal in sortedArray) {
@@ -226,49 +192,24 @@
         cv::Mat mask = cv::Mat::zeros(orig_image.size(),CV_8UC1);
         cv::drawContours(mask, contours,contourIndex, cv::Scalar::all(255), cv::FILLED );
         cv::Mat op;
-//        cv::Mat masked  = cv::Mat(orig_image.size().height , orig_image.size().width,orig_image.type());
-//        masked.setTo(cv::Scalar(0,0));
-//        [images addObject:[OpenCVWrapper UIImageFromCVMat:mask]];
         orig_image.copyTo(op, mask);
-//        cv::Mat croppedImage;
-       
-//        [images addObject:[OpenCVWrapper UIImageFromCVMat:op]];
-//        op.copyTo(croppedImage);
         cv::Mat croppedImage;
         cv::Mat(op, roiF).copyTo(croppedImage);
-        
         int size = roiF.height > roiF.width ? roiF.height : roiF.width;
-        
-        cv::Mat  resizeImage = cv::Mat(size + 34,size + 34, croppedImage.type());
-        int offset_height = ((size) / 2 - (roiF.height) / 2);
-        int offset_width = ((size) / 2 - (roiF.width) / 2);
-
+        cv::Mat  resizeImage = cv::Mat(size + 8,size + 8, croppedImage.type());
         if (size == roiF.height) {
-
-            int x = (size + 34 - roiF.width)/2;
+            int x = (size + 8 - roiF.width)/2;
             croppedImage(cv::Range(0,croppedImage.rows -1),cv::Range(0,croppedImage.cols -1))
-            .copyTo(resizeImage(cv::Range(17,17 + croppedImage.rows -1 ),cv::Range(x , x + croppedImage.cols -1)  ));
-            
-           
-
+            .copyTo(resizeImage(cv::Range(4,4 + croppedImage.rows -1 ),cv::Range(x , x + croppedImage.cols -1)  ));
         } else if (size == roiF.width) {
-            
-           
-            int  y  = (size + 34 - roiF.height)/2;
+            int  y  = (size + 8 - roiF.height)/2;
             croppedImage(cv::Range(0,croppedImage.rows -1),cv::Range(0,croppedImage.cols -1)  )
-            .copyTo(resizeImage(cv::Range(y,y+croppedImage.rows - 1),cv::Range(17 ,17 +  croppedImage.cols-1 )  ));
-//
-           
-            
+            .copyTo(resizeImage(cv::Range(y,y+croppedImage.rows - 1),cv::Range(4 ,4 +  croppedImage.cols-1 )  ));
         }
         cv::Mat  size28_28  = cv::Mat::zeros(cv::Size(28,28),resizeImage.type());
         cv::resize(resizeImage, size28_28, cv::Size(28,28),0,0);
-         [images addObject:[OpenCVWrapper UIImageFromCVMat:size28_28]];
-
+        [images addObject:[OpenCVWrapper UIImageFromCVMat:size28_28]];
     }
-    
-   
-    
     return images;
 }
 

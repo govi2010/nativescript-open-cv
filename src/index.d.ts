@@ -1,3 +1,5 @@
+import {ImageSource} from "tns-core-modules/image-source";
+
 export declare class OpenCV {
     extractChannel(srcMat: any, destMat: any): void;
 
@@ -30,6 +32,8 @@ export declare class OpenCV {
     CreateRange(start: number, end: number): any;
 
     resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: number): void;
+
+    toAll28X28Image(res: any): ImageSource[]
 }
 
 export declare enum SpecialFilter {

@@ -1,3 +1,5 @@
+import {ImageSource} from "tns-core-modules/image-source";
+
 export abstract class CommanOpenCV {
     abstract extractChannel(srcMat: any, destMat: any): void;
 
@@ -30,6 +32,8 @@ export abstract class CommanOpenCV {
     abstract CreateRange(start: number, end: number): any;
 
     abstract resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: number): void;
+
+    abstract toAll28X28Image(res: any): ImageSource[]
 
     // cvtColor
     // MatToImage
