@@ -25,17 +25,17 @@ export class OpenCV extends CommanOpenCV {
 
     constructor() {
         super();
+    }
+
+    load() {
         try {
             if (org && org.bytedeco && org.bytedeco.javacpp) {
                 org.bytedeco.javacpp.Loader.load(org.bytedeco.opencv.helper.opencv_core.class);
                 org.bytedeco.javacpp.Loader.load(org.bytedeco.opencv.helper.opencv_imgproc.class);
             }
         } catch (e) {
-            debugger;
-        }
-        console.log(org);
 
-        debugger;
+        }
     }
 
     cvtColor(srcMat: any, destMat: any, dstChannels: ColorConversionCodes): void {
@@ -101,15 +101,16 @@ export class OpenCV extends CommanOpenCV {
     }
 
     CreateMatZero(size: any, type) {
-        return new org.bytedeco.opencv.opencv_core.Mat(size, type);
+        return new org.bytedeco.opencv.opencv_core.Mat(size, type, new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 0, 0));
     }
+
 
     findContours(srcMat: any, contoursMatVector: any, hierarchyMat: any, mode: RetrievalModes, method: ContourApproximationModes): void {
         org.bytedeco.opencv.global.opencv_imgproc.findContours(srcMat, contoursMatVector, hierarchyMat, mode, method);
     }
 
     drawContours(srcMat: any, contours: any, index: number, color: any, lineType: LineTypes): void {
-        org.bytedeco.opencv.global.opencv_imgproc.findContours(srcMat, contours, index, color, lineType);
+        org.bytedeco.opencv.global.opencv_imgproc.drawContours(srcMat, contours, index, color, -1, 8, null, Number.MAX_SAFE_INTEGER, new org.bytedeco.opencv.opencv_core.Point(0, 0));
     }
 
     contourArea(contour: any): number {
@@ -147,11 +148,11 @@ export class OpenCV extends CommanOpenCV {
         this.threshold(main_image, main_image, 0, 255, ThresholdTypes.THRESH_OTSU)
         //.threshold(main_image, main_image, 127, 255, org.bytedeco.opencv.global.opencv_imgproc.THRESH_OTSU + org.bytedeco.opencv.global.opencv_imgproc.THRESH_BINARY)
 
-        let rect_kernel = this.getStructuringElement(MorphShapes.MORPH_RECT, {x: 1, y: 20});
+        let rect_kernel = this.getStructuringElement(MorphShapes.MORPH_RECT, {x: 1, y: 1});
         this.dilate(main_image, main_image, rect_kernel);
         const hierarchy = this.CreateMat();
         let contours = this.CreateMatVector();
-        contours = this.findContours(main_image, contours, hierarchy, RetrievalModes.RETR_EXTERNAL, ContourApproximationModes.CHAIN_APPROX_NONE);
+        this.findContours(main_image, contours, hierarchy, RetrievalModes.RETR_EXTERNAL, ContourApproximationModes.CHAIN_APPROX_NONE);
         let areaArray = [];
         for (let i = 0; i < contours.size(); i++) {
             let contour = contours.get(i);
@@ -173,74 +174,53 @@ export class OpenCV extends CommanOpenCV {
             return 0;
         });
         for (let i = 0; i < areaArray.length; i++) {
-            let contourIndex = areaArray[i].i;
-            let contour = contours.get(contourIndex);
-            ;
-            let roiF = this.boundingRect(contour);
-            let mask = this.CreateMatZero(orig_image.size(), CV_8UC1);
-            this.drawContours(mask, contours, contourIndex, org.bytedeco.opencv.opencv_core.Scalar(255, 255, 255), LineTypes.FILLED);
-            let op;
-            orig_image.copyTo(op, mask);
-            let croppedImage;
-            this.CreateMatFromRect(op, roiF).copyTo(croppedImage);
-            let size = roiF.height() > roiF.width() ? roiF.height() : roiF.width();
-            let resizeImage = this.CreateMat_Color(size + 8, size + 8, croppedImage.type(), {
-                a: 255,
-                r: 255,
-                g: 255,
-                b: 255
-            });
-            if (size == roiF.height()) {
-                let x = (size + 8 - roiF.width()) / 2;
-                croppedImage(this.CreateRange(0, croppedImage.rows() - 1), this.CreateRange(0, croppedImage.cols - 1))
-                    .copyTo(resizeImage(this.CreateRange(4, 4 + croppedImage.rows - 1), this.CreateRange(x, x + croppedImage.cols - 1)));
-            } else if (size == roiF.width) {
-                let y = (size + 8 - roiF.height()) / 2;
-                croppedImage(this.CreateRange(0, croppedImage.rows - 1), this.CreateRange(0, croppedImage.cols - 1))
-                    .copyTo(resizeImage(this.CreateRange(y, y + croppedImage.rows - 1), this.CreateRange(4, 4 + croppedImage.cols - 1)));
+            if (areaArray[i].rectO.height() > 150 || areaArray[i].rectO.width() > 150) {
+                let contourIndex = areaArray[i].i;
+                let contour = contours.get(contourIndex);
+
+                let roiF = this.boundingRect(contour);
+                let mask = this.CreateMatZero(orig_image.size(), org.bytedeco.opencv.global.opencv_core.CV_8UC1);
+                this.drawContours(mask, contours, contourIndex, new org.bytedeco.opencv.opencv_core.Scalar(255, 255, 255, 255), LineTypes.FILLED);
+                let op = this.CreateMat();
+                orig_image.copyTo(op, mask);
+                let croppedImage = this.CreateMat();
+                this.CreateMatFromRect(op, roiF).copyTo(croppedImage);
+                let size = roiF.height() > roiF.width() ? roiF.height() : roiF.width();
+                let resizeImage = this.CreateMat_Color(size + 0, size + 0, croppedImage.type(), {
+                    a: 255,
+                    r: 0,
+                    g: 0,
+                    b: 0
+                });
+                if (size == roiF.height()) {
+                    let x = (size - roiF.width()) / 2;
+                    croppedImage.apply(this.CreateRange(0, croppedImage.size().height() - 1), this.CreateRange(0, croppedImage.size().width() - 1))
+                        .copyTo(resizeImage.apply(this.CreateRange(0, 0 + croppedImage.size().height() - 1), this.CreateRange(x, x + croppedImage.size().width() - 1)));
+                } else if (size == roiF.width()) {
+                    let y = (size + 0 - roiF.height()) / 2;
+                    croppedImage.apply(this.CreateRange(0, croppedImage.size().height() - 1), this.CreateRange(0, croppedImage.size().width() - 1))
+                        .copyTo(resizeImage.apply(this.CreateRange(y, y + croppedImage.size().height() - 1), this.CreateRange(0, 0 + croppedImage.size().width() - 1)));
+                }
+                let size23_23 = this.CreateMatZero(new org.bytedeco.opencv.opencv_core.Size(23, 23), resizeImage.type());
+                this.resize(resizeImage, size23_23, new org.bytedeco.opencv.opencv_core.Size(23, 23), 0, 0, InterpolationFlags.INTER_AREA);
+                let size28_28 = this.CreateMatZero(new org.bytedeco.opencv.opencv_core.Size(28, 28), resizeImage.type());
+                size23_23.apply(this.CreateRange(0, 23), this.CreateRange(0, 23))
+                    .copyTo(size28_28.apply(this.CreateRange(3, 3 + 23), this.CreateRange(3, 3 + 23)));
+                images.push(this.MatToImage(size28_28));
+                size28_28.release();
+                size23_23.release();
+                resizeImage.release();
+                mask.release();
+                op.release();
+
+
             }
-            let size28_28 = this.CreateMatZero(org.bytedeco.opencv.opencv_core.Size(28, 28), resizeImage.type());
-            images.push(this.MatToImage(size28_28));
-            this.resize(resizeImage, size28_28, org.bytedeco.opencv.opencv_core.Size(28, 28), 0, 0, InterpolationFlags.INTER_AREA);
-            // [images addObject:[OpenCVWrapper UIImageFromCVMat:size28_28]];
+
         }
-        // if (areaArray.length >= 1) {
-        //     let rec = areaArray[areaArray.length - 1].rectO;
-        //     let width: number = rec.width();
-        //     let height: number = rec.height();
-        //     let size: number = height > width ? height : width;
-        //     main_image = this.CreateMatFromRect(orig_image, rec);
-        //     let offset_height = ((size + 34) / 2 - (height + 34) / 2);
-        //     let offset_width = ((size + 34) / 2 - (width + 34) / 2);
-        //     let resizeImage = this.CreateMat_Color(size + 34, size + 34, main_image.type(), {
-        //         b: 0.00,
-        //         g: 0.00,
-        //         r: 0.00,
-        //         a: 255.00
-        //     });
-        //     if (offset_width > 0) {
-        //         let rowRange = this.CreateRange(0, height); //select maximum allowed cols
-        //         let rowDestRange = this.CreateRange(17, height + 17);
-        //         main_image.apply(rowRange, this.CreateRange(0, width)).copyTo(resizeImage.apply(rowDestRange, this.CreateRange(offset_width, offset_width + width)));
-        //     } else if (offset_height > 0) {
-        //         let colRange = this.CreateRange(0, width); //select maximum allowed cols
-        //         let colDestRange = this.CreateRange(17, width + 17);
-        //         main_image.apply(this.CreateRange(0, height), colRange).copyTo(resizeImage.apply(this.CreateRange(offset_height, offset_height + height), colDestRange));
-        //
-        //     }
-        //     let size28_28 = this.CreateMat_Color(28, 28, (resizeImage as any).type(), {
-        //         b: 0.00,
-        //         g: 0.00,
-        //         r: 0.00,
-        //         a: 255.00
-        //     });
-        //     this.resize(resizeImage, size28_28, size28_28.size(), 0, 0, InterpolationFlags.INTER_AREA);
-        //     this.cvtColor(size28_28, size28_28, ColorConversionCodes.COLOR_BGR2GRAY);
-        //     let bitmap = this.MatToImage(size28_28);
-        //     return bitmap;
-        // }
-        // let bitmap = this.MatToImage(main_image);
+        main_image.release();
+        orig_image.release();
         return images.map(p => fromNativeSource(p));
+
     }
 }
 

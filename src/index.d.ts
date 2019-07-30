@@ -34,6 +34,8 @@ export declare class OpenCV {
     resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: number): void;
 
     toAll28X28Image(res: any): ImageSource[]
+
+    load();
 }
 
 export declare enum SpecialFilter {

@@ -9,8 +9,6 @@ declare var OpenCVMat: any, OPENCV_8UC4;
 export class OpenCV extends CommanOpenCV {
     constructor() {
         super();
-        // debugger;
-
     }
 
     cvtColor(srcMat: any, destMat: any, colortype: number): void {
@@ -26,12 +24,10 @@ export class OpenCV extends CommanOpenCV {
     }
 
     MatToImage(srcMat: any) {
-        // debugger;
         return srcMat.toImage();
     }
 
     ImageToMat(bitMapImage: any) {
-        // debugger;
         if (bitMapImage instanceof ImageSource) {
             // console.log('imread', 'ImageSource');
             bitMapImage = bitMapImage.ios;
@@ -74,7 +70,6 @@ export class OpenCV extends CommanOpenCV {
 
     CreateMat_Color(rows: number, cols: number, imageType: any, color: any) {
         const result = OpenCVMat.alloc().initWithRowsColsType(rows, cols, imageType);
-        debugger;
         // console.log('createMat', rows, cols, type, result.size().width, result.size().height);
         return result;
     }
@@ -112,6 +107,9 @@ export class OpenCV extends CommanOpenCV {
         let main_image = this.ImageToMat(res);
         let nsarray = main_image.toAll28X28Image();
         return nsArrayToJSArray(nsarray).map(p => fromNativeSource(p));
+    }
+
+    load() {
     }
 
 

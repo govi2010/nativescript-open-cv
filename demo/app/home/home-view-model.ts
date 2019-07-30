@@ -53,17 +53,9 @@ export class HomeViewModel extends Observable {
 
         try {
             // return res;
-            // debugger;
-            let main_image = this.OpenCv.ImageToMat(res);
-            if (!isIOS) {
-
-                let bitmap = this.OpenCv.MatToImage(main_image);
-                return bitmap;
-            } else {
-                debugger;
-
-                return bitmap1;
-            }
+            debugger;
+            let main_image = this.OpenCv.toAll28X28Image(res);
+            return main_image
 
         } catch (r) {
             console.log(r)
@@ -80,10 +72,9 @@ export class HomeViewModel extends Observable {
             console.log(res);
 
             let bit = this.get_contours(res);
-            let images = ;
             this.set('prediction', "");
             // const image = fromNativeSource(bit);
-            this.set('drawingImage', images);
+            this.set('drawingImage', bit);
             // const imageBase64 = image.toBase64String('jpeg');
             // request({
             //     url: "http://192.168.1.6:5001/api/test",
