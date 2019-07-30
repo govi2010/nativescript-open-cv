@@ -11,6 +11,7 @@ import {
     ThresholdTypes
 } from './open-cv.common';
 import {fromNativeSource, ImageSource} from "tns-core-modules/image-source";
+import {releaseNativeObject} from "tns-core-modules/utils/utils";
 
 declare var org: any;
 declare var java: any;
@@ -46,7 +47,11 @@ export class OpenCV extends CommanOpenCV {
         let converterToBitmap = new org.bytedeco.javacv.AndroidFrameConverter();
         let converterToMat = new org.bytedeco.javacv.OpenCVFrameConverter.ToMat();
         let frame = converterToMat.convert(srcMat);
-        return converterToBitmap.convert(frame);
+        let result = converterToBitmap.convert(frame);
+        releaseNativeObject(frame);
+        releaseNativeObject(converterToMat);
+        releaseNativeObject(converterToBitmap);
+        return result;
     }
 
     ImageToMat(bitMapImage: any) {
@@ -55,6 +60,9 @@ export class OpenCV extends CommanOpenCV {
         // let frame = converterToMat.convert(res);
         let frame = converterToBitmap.convert(bitMapImage);
         let main_image = converterToMat.convertToMat(frame);
+        releaseNativeObject(frame);
+        releaseNativeObject(converterToMat);
+        releaseNativeObject(converterToBitmap);
         return main_image;
     }
 
@@ -64,7 +72,9 @@ export class OpenCV extends CommanOpenCV {
 
     GaussianBlur(srcMat: any, destMat: any, size: { x, y }, x: number, y: number, borderTypes: BorderTypes): void {
         // throw new Error("Methodnotimplemented.");
-        org.bytedeco.opencv.global.opencv_imgproc.GaussianBlur(srcMat, destMat, new org.bytedeco.opencv.opencv_core.Size(size.x, size.y), x, y, borderTypes);
+        let s = new org.bytedeco.opencv.opencv_core.Size(size.x, size.y);
+        org.bytedeco.opencv.global.opencv_imgproc.GaussianBlur(srcMat, destMat, s, x, y, borderTypes);
+        releaseNativeObject(s);
     }
 
     adaptiveThreshold(srcMat: any, destMat: any, maxValue: number, adaptiveMethod: AdaptiveThresholdTypes, thresholdType: ThresholdTypes, blockSize: number, C: number): void {
@@ -77,7 +87,10 @@ export class OpenCV extends CommanOpenCV {
 
 
     getStructuringElement(morphShapes: MorphShapes, size: { x: number, y: number }): any {
-        return org.bytedeco.opencv.global.opencv_imgproc.getStructuringElement(morphShapes, new org.bytedeco.opencv.opencv_core.Size(size.x, size.y));
+        let s = new org.bytedeco.opencv.opencv_core.Size(size.x, size.y);
+        let result = org.bytedeco.opencv.global.opencv_imgproc.getStructuringElement(morphShapes, s);
+        releaseNativeObject(s);
+        return result;
     }
 
     dilate(srcMat: any, destMat: any, rect_kernel: any) {
@@ -93,7 +106,10 @@ export class OpenCV extends CommanOpenCV {
     }
 
     CreateMat_Color(rows: number, cols: number, imageType: any, color: { b, g, r, a }): any {
-        return new org.bytedeco.opencv.opencv_core.Mat(rows, cols, imageType, new org.bytedeco.opencv.opencv_core.Scalar(color.b, color.g, color.r, color.a));
+        let colorS = new org.bytedeco.opencv.opencv_core.Scalar(color.b, color.g, color.r, color.a);
+        let mat = new org.bytedeco.opencv.opencv_core.Mat(rows, cols, imageType, colorS);
+        releaseNativeObject(colorS);
+        return mat;
     }
 
     CreateMatVector() {
@@ -101,7 +117,10 @@ export class OpenCV extends CommanOpenCV {
     }
 
     CreateMatZero(size: any, type) {
-        return new org.bytedeco.opencv.opencv_core.Mat(size, type, new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 0, 0));
+        let c = new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 0, 0)
+        let mat = new org.bytedeco.opencv.opencv_core.Mat(size, type, c);
+        releaseNativeObject(c);
+        return mat;
     }
 
 
@@ -110,7 +129,9 @@ export class OpenCV extends CommanOpenCV {
     }
 
     drawContours(srcMat: any, contours: any, index: number, color: any, lineType: LineTypes): void {
-        org.bytedeco.opencv.global.opencv_imgproc.drawContours(srcMat, contours, index, color, -1, 8, null, Number.MAX_SAFE_INTEGER, new org.bytedeco.opencv.opencv_core.Point(0, 0));
+        let p = new org.bytedeco.opencv.opencv_core.Point(0, 0);
+        org.bytedeco.opencv.global.opencv_imgproc.drawContours(srcMat, contours, index, color, -1, 8, null, Number.MAX_SAFE_INTEGER, p);
+        releaseNativeObject(p);
     }
 
     contourArea(contour: any): number {
@@ -212,6 +233,11 @@ export class OpenCV extends CommanOpenCV {
                 resizeImage.release();
                 mask.release();
                 op.release();
+                releaseNativeObject(size28_28);
+                releaseNativeObject(size23_23);
+                releaseNativeObject(mask);
+                releaseNativeObject(op);
+                releaseNativeObject(resizeImage);
 
 
             }
@@ -219,6 +245,11 @@ export class OpenCV extends CommanOpenCV {
         }
         main_image.release();
         orig_image.release();
+        hierarchy.release();
+        releaseNativeObject(main_image);
+        releaseNativeObject(orig_image);
+        releaseNativeObject(hierarchy);
+        releaseNativeObject(contours);
         return images.map(p => fromNativeSource(p));
 
     }
