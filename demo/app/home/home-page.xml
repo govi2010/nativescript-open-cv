@@ -7,9 +7,9 @@
         <Label class="action-bar-title" text="Home"></Label>
     </ActionBar>
 
-    <ScrollView>
+    <!--<ScrollView>-->
         <StackLayout>
-            <DrawingPad:DrawingPad backgroundColor="#ffffff" id="drawingPad" margin="10" height="350" penColor="{{ penColor }}" penWidth="{{ penWidth }}" />
+            <DrawingPad:DrawingPad backgroundColor="#ffffff" id="drawingPad" margin="10" height="900" penColor="{{ penColor }}" penWidth="{{ penWidth }}" />
             
             <Label text="{{ prediction }}" class="message" textWrap="true" row="0" col="1" />
             <StackLayout orientation="horizontal">
@@ -22,11 +22,11 @@
                         <StackLayout orientation="horizontal" />
                     </Repeater.itemsLayout>
                     <Repeater.itemTemplate >
-                        <Image class="picture-stack" stretch="aspectFit" src="{{$value}}" height="100" style="margin: 10"  />
+                        <Image class="picture-stack" stretch="aspectFit" src="{{$value}}" height="300" style="margin: 10"  />
                     </Repeater.itemTemplate>
                 </Repeater>
             </ScrollView>
             <!--<Image src="{{ drawingImage }}" height="150" visibility="{{ drawingImage ? 'visible' : 'collapsed' }}" stretch="aspectFit" />-->
         </StackLayout>
-    </ScrollView>
+    <!--</ScrollView>-->
 </Page>

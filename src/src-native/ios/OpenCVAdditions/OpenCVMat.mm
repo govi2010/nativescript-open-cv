@@ -11,6 +11,7 @@
 #import "OpenCVMat.h"
 #import "OpenCVWrapper.h"
 
+
 @implementation OpenCVMat
 {
   cv::Mat _mat;
@@ -163,59 +164,132 @@
     cv::bitwise_not(matInput, matInput);
     cv::Mat orig_image;
     matInput.copyTo(orig_image);
+    
+    
     cv::cvtColor(matInput,matInput,cv::COLOR_BGR2GRAY);
     cv::GaussianBlur(matInput, matInput, cv::Size(5, 5), cv::BORDER_DEFAULT);
-    //        cv::adaptiveThreshold(matInput, matInput, 125, cv::ADAPTIVE_THRESH_MEAN_C,cv::THRESH_BINARY_INV,11,12);
     cv::threshold(matInput, matInput, 0,255, cv::THRESH_OTSU);
-    cv::Mat rect_kernel =  cv::getStructuringElement(cv::MORPH_RECT, cv::Size(1, 1));
-    cv::dilate(matInput,matInput, rect_kernel);
     std::vector<std::vector<cv::Point>> contours;
-    NSMutableArray *d = [[NSMutableArray alloc] init];
-    std::vector<cv::Vec4i> hierarchy;
+
     cv::findContours(matInput, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE, cv::Point(0, 0));
     std::vector<Point> approx;
+    std::vector<int> widthArray;
+    std::vector<int> heightArray;
     for (size_t i = 0; i < contours.size(); i++)
     {
         std::vector<cv::Point> contour=contours.at(i);
+        cv::Rect roi= cv::boundingRect(contour);
+        widthArray.push_back(roi.width);
+        heightArray.push_back(roi.height);
+    }
+    
+    std::sort(widthArray.begin(), widthArray.end());
+    int lowwidthMiddle = floor((widthArray.size() - 1) / 2);
+    int highwidthMiddle = ceil((widthArray.size() - 1) / 2);
+    int widthMedian = (widthArray[lowwidthMiddle] + widthArray[highwidthMiddle]) / 2;
+
+    std::sort(heightArray.begin(), heightArray.end());
+  
+    int lowheightMiddle = floor((heightArray.size() - 1) / 2);
+    int highheightMiddle = ceil((heightArray.size() - 1) / 2);
+    int heightMedian = (heightArray[lowheightMiddle] + heightArray[highheightMiddle]) / 2;
+    
+     NSMutableArray *images = [[NSMutableArray alloc] init];
+    cv::Mat rect_kernel =  cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(1, (heightMedian* 2)/3));
+    cv::dilate(matInput,matInput, rect_kernel);
+    NSLog(@"heightMedian %d  widthMedian: %d ", heightMedian, widthMedian);
+    std::vector<std::vector<cv::Point>> contoursF;
+    NSMutableArray *d = [[NSMutableArray alloc] init];
+    cv::findContours(matInput, contoursF, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    
+    for (size_t i = 0; i < contoursF.size(); i++)
+    {
+        std::vector<cv::Point> contour=contoursF.at(i);
         cv::Rect roi= cv::boundingRect(contour);
         int area= cv::contourArea(contour);
         [d addObject:@{@"x":@(roi.x),@"y": @(roi.y) , @"width": @(roi.width) , @"height" :@(roi.height) , @"area":@(area), @"i":@(i) }];
     }
     NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"x" ascending:YES];
     NSArray *sortedArray = [d sortedArrayUsingDescriptors:@[descriptor]];
-    NSMutableArray *images = [[NSMutableArray alloc] init];
+    
     for (NSDictionary * roiFinal in sortedArray) {
-        int area =[[roiFinal valueForKey:@"area"] intValue];
         int contourIndex =[[roiFinal valueForKey:@"i"] intValue];
-        std::vector<cv::Point> contour=contours.at(contourIndex);
-        cv::Rect roiF= cv::boundingRect(contour);
-        if(roiF.height>100 || roiF.width > 100){
-        NSLog(@"area %d  height: %d  width: %d", area, roiF.height , roiF.width);
         cv::Mat mask = cv::Mat::zeros(orig_image.size(),CV_8UC1);
-        cv::drawContours(mask, contours,contourIndex, cv::Scalar::all(255), cv::FILLED );
+        cv::drawContours(mask, contoursF,contourIndex, cv::Scalar::all(255), cv::FILLED );
         cv::Mat op;
         orig_image.copyTo(op, mask);
+        
+        cv::cvtColor(op,op,cv::COLOR_BGR2GRAY);
+        cv::GaussianBlur(op, op, cv::Size(5, 5), cv::BORDER_DEFAULT);
+        cv::threshold(op, op, 0,255, cv::THRESH_OTSU);
+
+        std::vector<std::vector<cv::Point>> contoursH;
+        cv::findContours(op, contoursH, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+        mask.release();
+        op.release();
+        
+        cv::Mat mask1 = cv::Mat::zeros(orig_image.size(),CV_8UC1);
+        cv::drawContours(mask1, contoursH,-1, cv::Scalar::all(255), cv::FILLED );
+        cv::Mat op1;
+        orig_image.copyTo(op1, mask1);
+        
+        mask1.release();
+        op1.release();
+        
+        std::vector<cv::Rect> rectArray;
+        for (size_t i = 0; i < contoursH.size(); i++)
+        {
+            std::vector<cv::Point> contour=contoursH.at(i);
+            cv::Rect roi= cv::boundingRect(contour);
+            rectArray.push_back(roi);
+        }
+        cv::Rect outerRect;
+        for (size_t i = 0; i < rectArray.size(); i++)
+        {
+            if(i==0){
+                outerRect=rectArray.at(i);
+            }else {
+                cv::Rect currentRect =rectArray.at(i);
+                int x = std::min(outerRect.x, currentRect.x);
+                int y = std::min(outerRect.y, currentRect.y);
+                int w = std::max(outerRect.x + outerRect.width, currentRect.x + currentRect.width) - x;
+                int h = std::max(outerRect.y + outerRect.height, currentRect.y + currentRect.height) - y;
+                outerRect  = cv::Rect(x, y, w, h);
+            }
+        }
         cv::Mat croppedImage;
-        cv::Mat(op, roiF).copyTo(croppedImage);
-        int size = roiF.height > roiF.width ? roiF.height : roiF.width;
+        cv::Mat(orig_image, outerRect).copyTo(croppedImage);
+       
+        int size = outerRect.height > outerRect.width ? outerRect.height : outerRect.width;
         cv::Mat  resizeImage = cv::Mat(size,size, croppedImage.type(),cv::Scalar(0,0,0,0));
-        if (size == roiF.height) {
-            int x = (size - roiF.width)/2;
+        if (size == outerRect.height) {
+            int x = (size - outerRect.width)/2;
             croppedImage(cv::Range(0,croppedImage.rows -1),cv::Range(0,croppedImage.cols -1))
             .copyTo(resizeImage(cv::Range(0,0 + croppedImage.rows -1 ),cv::Range(x , x + croppedImage.cols -1)  ));
-        } else if (size == roiF.width) {
-            int  y  = (size - roiF.height)/2;
+        } else if (size == outerRect.width) {
+            int  y  = (size - outerRect.height)/2;
             croppedImage(cv::Range(0,croppedImage.rows -1),cv::Range(0,croppedImage.cols -1)  )
             .copyTo(resizeImage(cv::Range(y,y+croppedImage.rows - 1),cv::Range(0 ,0 +  croppedImage.cols-1 )  ));
         }
+        int iteration = ((resizeImage.rows/100)*2)/ 3;
+        cv::Mat rect_kernel1 =  cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+        cv::dilate(croppedImage,croppedImage, rect_kernel1, cv::Point(-1,-1), iteration,
+                   cv::BORDER_CONSTANT,
+                   cv::Scalar::all(DBL_MAX));
         cv::Mat  size23_23  = cv::Mat(cv::Size(23,23),resizeImage.type(),cv::Scalar(0,0,0,0));
-        cv::resize(resizeImage, size23_23, cv::Size(23,23),0,0);
+        cv::resize(resizeImage, size23_23, cv::Size(23,23),0,0, cv::INTER_AREA);
         cv::Mat  size28_28  = cv::Mat(cv::Size(28,28),resizeImage.type(),cv::Scalar(0,0,0,0));
             size23_23(cv::Range(0, 23), cv::Range(0, 23))
             .copyTo(size28_28(cv::Range(3, 3 + 23), cv::Range(3, 3 + 23)));
         [images addObject:[OpenCVWrapper UIImageFromCVMat:size28_28]];
-        }
+        croppedImage.release();
+        size28_28.release();
+        size23_23.release();
+        resizeImage.release();
+//        }
     }
+    matInput.release();
+    orig_image.release();
     return images;
 }
 
