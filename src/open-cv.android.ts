@@ -171,8 +171,6 @@ export class OpenCV extends CommanOpenCV {
 
 
         let main_image = this.ImageToMat(res);
-        this.eastDetection(main_image);
-        images.push(this.MatToImage(res));
         this.cvtColor(main_image, main_image, ColorConversionCodes.COLOR_RGB2BGR);
         this.bitwise_not(main_image, main_image);
         let orig_image = main_image.clone();
