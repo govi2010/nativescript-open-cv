@@ -78,7 +78,7 @@ export class OpenCV extends CommanOpenCV {
     }
 
     adaptiveThreshold(srcMat: any, destMat: any, maxValue: number, adaptiveMethod: AdaptiveThresholdTypes, thresholdType: ThresholdTypes, blockSize: number, C: number): void {
-        org.bytedeco.opencv.global.opencv_imgproc.adaptiveThreshold(srcMat, destMat, maxValue, adaptiveMethod, thresholdType, blockSize, C)
+        org.bytedeco.opencv.global.opencv_imgproc.adaptiveThreshold(srcMat, destMat, maxValue, adaptiveMethod, thresholdType, blockSize, C);
     }
 
     threshold(srcMat: any, destMat: any, thresh: number, maxval: number, thresholdType: ThresholdTypes): void {
@@ -121,7 +121,7 @@ export class OpenCV extends CommanOpenCV {
     }
 
     CreateMatZero(size: any, type) {
-        let c = new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 0, 0)
+        let c = new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 0, 0);
         let mat = new org.bytedeco.opencv.opencv_core.Mat(size, type, c);
         releaseNativeObject(c);
         return mat;
@@ -134,7 +134,8 @@ export class OpenCV extends CommanOpenCV {
 
     drawContours(srcMat: any, contours: any, index: number, color: any, lineType: LineTypes): void {
         let p = new org.bytedeco.opencv.opencv_core.Point(0, 0);
-        org.bytedeco.opencv.global.opencv_imgproc.drawContours(srcMat, contours, index, color, -1, 8, null, Number.MAX_SAFE_INTEGER, p);
+        // @ts-ignore
+        org.bytedeco.opencv.global.opencv_imgproc.drawContours(srcMat, contours, index, color, lineType, 8, null, Number.MAX_SAFE_INTEGER, p);
         releaseNativeObject(p);
     }
 
@@ -159,17 +160,18 @@ export class OpenCV extends CommanOpenCV {
 
     FindMedian(values) {
         values.sort((a, b) => a - b);
+        // @ts-ignore
         let lowMiddle = Math.floor((values.length - 1) / 2);
+        // @ts-ignore
         let highMiddle = Math.ceil((values.length - 1) / 2);
         let median = (values[lowMiddle] + values[highMiddle]) / 2;
         return median;
     }
 
-    toAll28X28Image(res): ImageSource[] {
+    toAll28X28Image(res): { img: ImageSource, rect }[] {
 
         let images = [];
-
-
+        console.log("this is more cool.");
         let main_image = this.ImageToMat(res);
         this.cvtColor(main_image, main_image, ColorConversionCodes.COLOR_RGB2BGR);
         this.bitwise_not(main_image, main_image);
@@ -179,10 +181,11 @@ export class OpenCV extends CommanOpenCV {
         let hierarchy = this.CreateMat();
         let contours = this.CreateMatVector();
         this.findContours(main_image, contours, hierarchy, RetrievalModes.RETR_EXTERNAL, ContourApproximationModes.CHAIN_APPROX_NONE);
-        let areaArray = [];
+        let areaArray: any[] = [];
         for (let i = 0; i < contours.size(); i++) {
             let contour = contours.get(i);
             let rect = this.boundingRect(contour);
+            // @ts-ignore
             areaArray.push({
                 area: this.contourArea(contour),
                 rectO: rect,
@@ -190,9 +193,11 @@ export class OpenCV extends CommanOpenCV {
                 height: rect.height(),
                 i: i,
                 contour: contour
-            })
+            });
         }
+        // @ts-ignore
         let medHeight = this.FindMedian(areaArray.map(p => p.height));
+        // @ts-ignore
         let medWidth = this.FindMedian(areaArray.map(p => p.width));
         console.log('Old medHeight: ' + medHeight);
         console.log('Old medWidth: ' + medWidth);
@@ -207,6 +212,7 @@ export class OpenCV extends CommanOpenCV {
         for (let i = 0; i < contours.size(); i++) {
             let contour = contours.get(i);
             let rect = this.boundingRect(contour);
+            // @ts-ignore
             areaArray.push({
                 area: this.contourArea(contour),
                 rectO: rect,
@@ -214,12 +220,15 @@ export class OpenCV extends CommanOpenCV {
                 height: rect.height(),
                 i: i,
                 contour: contour
-            })
+            });
         }
 
 
+        // @ts-ignore
         medHeight = this.FindMedian(areaArray.map(p => p.height));
+        // @ts-ignore
         medWidth = this.FindMedian(areaArray.map(p => p.width));
+        // @ts-ignore
         areaArray = areaArray.sort((a, b) => {
             if (a.rectO.x() < b.rectO.x()) {
                 return -1;
@@ -251,13 +260,15 @@ export class OpenCV extends CommanOpenCV {
                 let contour = contoursF.get(i);
                 let rect = this.boundingRect(contour);
                 this.drawContours(mask1, contoursF, i, new org.bytedeco.opencv.opencv_core.Scalar(255, 255, 255, 255), LineTypes.FILLED);
-                rectArray.push(rect)
+                // @ts-ignore
+                rectArray.push(rect);
             }
-            let roiF2 = this.getMostOuterBox(rectArray); //this.boundingRect(contoursF.get(0));
+            let roiF2 = this.getMostOuterBox(rectArray); // this.boundingRect(contoursF.get(0));
 
             let size28_28_F = this.CreateMatZero(new org.bytedeco.opencv.opencv_core.Size(28, 28), orig_image.type());
-            this.get28X28(orig_image, mask1, roiF2, size28_28_F)
-            images.push(this.MatToImage(size28_28_F));
+            this.get28X28(orig_image, mask1, roiF2, size28_28_F);
+            // @ts-ignore
+            images.push({img: this.MatToImage(size28_28_F), rect: roiF2});
 
 
             size28_28_F.release();
@@ -275,8 +286,185 @@ export class OpenCV extends CommanOpenCV {
         releaseNativeObject(orig_image);
         releaseNativeObject(hierarchy);
         releaseNativeObject(contours);
-        return images.map(p => fromNativeSource(p));
+        // @ts-ignore
+        images.forEach((p: { img, rect }) => {
+            p.img = fromNativeSource(p.img);
+        });
+        return images;
 
+    }
+
+    ChangeColor(res, rect, result): any {
+        let main_image1 = this.ImageToMat(res);
+        // let main_image = this.ImageToMat(res);
+        let greenBuffer = java.nio.DoubleBuffer.wrap([0.0, 255.0, 0.0, 255]);
+        let redBuffer = java.nio.DoubleBuffer.wrap([255.0, 0.0, 0.0, 255]);
+        let mask1 = this.CreateMatZero(main_image1.size(), org.bytedeco.opencv.global.opencv_core.CV_8UC1);
+        let dst = this.CreateMat();
+        debugger;
+        this.CreateMatFromRect(main_image1, rect).copyTo(dst);
+        dst = this.convertGray(dst);
+        this.bitwise_not(dst, dst);
+        dst.apply(this.CreateRange(0, dst.size().height() - 1), this.CreateRange(0, dst.size().width() - 1))
+            .copyTo(mask1.apply(this.CreateRange(rect.y(), rect.y() + dst.size().height() - 1), this.CreateRange(rect.x(), rect.x() + dst.size().width() - 1)));
+        // this.bitwise_not(mask1, mask1);
+        main_image1.setTo(new org.bytedeco.opencv.opencv_core.Mat(4, 1, org.bytedeco.opencv.global.opencv_core.CV_64FC1, new org.bytedeco.javacpp.DoublePointer(result ? greenBuffer : redBuffer)), mask1);
+        return this.MatToImage(main_image1);
+    }
+
+    ApplyResultOnImage(res, rectArray: { rect, }[]): ImageSource {
+        let images = [];
+        console.log("this is more cool.");
+        let main_image1 = this.ImageToMat(res);
+        // main_image1.convertTo(dst1, org.bytedeco.opencv.global.opencv_core.CV_32SC4);
+        // this.cvtColor(main_image1, main_image1, ColorConversionCodes.COLOR_RGB2BGR);
+        let main_image = this.ImageToMat(res);
+        this.cvtColor(main_image, main_image, ColorConversionCodes.COLOR_RGB2BGR);
+        //
+
+        this.bitwise_not(main_image, main_image);
+        // this.threshold(main_image, main_image, 0, 255, ThresholdTypes.THRESH_BINARY);
+        // cv2.threshold(grayImage, 127, 255, cv2.THRESH_BINARY)
+        // let dst = new org.bytedeco.opencv.opencv_core.Mat(main_image1.size(), main_image1.type());
+        //
+        // let low = new org.bytedeco.opencv.opencv_core.Mat(1, 1, org.bytedeco.opencv.global.opencv_core.CV_32SC4, new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 200, 0));
+        // let high = new org.bytedeco.opencv.opencv_core.Mat(1, 1, org.bytedeco.opencv.global.opencv_core.CV_32SC4, new org.bytedeco.opencv.opencv_core.Scalar(180, 20, 255, 0));
+
+        // org.bytedeco.opencv.global.opencv_core.inRange(main_image, low, high, dst);
+        // this.bitwise_not(dst, dst);
+
+
+        // return fromNativeSource(this.MatToImage(main_image1));
+
+        let orig_image = main_image.clone();
+
+
+        this.processImageForFindContour(main_image);
+
+        let hierarchy = this.CreateMat();
+        let contours = this.CreateMatVector();
+        this.findContours(main_image, contours, hierarchy, RetrievalModes.RETR_EXTERNAL, ContourApproximationModes.CHAIN_APPROX_NONE);
+        let areaArray: any[] = [];
+        for (let i = 0; i < contours.size(); i++) {
+            let contour = contours.get(i);
+            let rect = this.boundingRect(contour);
+            // @ts-ignore
+            areaArray.push({
+                area: this.contourArea(contour),
+                rectO: rect,
+                width: rect.width(),
+                height: rect.height(),
+                i: i,
+                contour: contour
+            });
+        }
+        // @ts-ignore
+        let medHeight = this.FindMedian(areaArray.map(p => p.height));
+        // @ts-ignore
+        let medWidth = this.FindMedian(areaArray.map(p => p.width));
+        console.log('Old medHeight: ' + medHeight);
+        console.log('Old medWidth: ' + medWidth);
+        console.log('dilate medHeight: ' + ((medHeight * 2) / 3));
+
+        let rect_kernel = this.getStructuringElement(MorphShapes.MORPH_CROSS, {x: 1, y: (medHeight * 2) / 3});
+        this.dilate(main_image, main_image, rect_kernel);
+        contours = this.CreateMatVector();
+        hierarchy = this.CreateMat();
+        this.findContours(main_image, contours, hierarchy, RetrievalModes.RETR_EXTERNAL, ContourApproximationModes.CHAIN_APPROX_NONE);
+        areaArray = [];
+        for (let i = 0; i < contours.size(); i++) {
+            let contour = contours.get(i);
+            let rect = this.boundingRect(contour);
+            // @ts-ignore
+            areaArray.push({
+                area: this.contourArea(contour),
+                rectO: rect,
+                width: rect.width(),
+                height: rect.height(),
+                i: i,
+                contour: contour
+            });
+        }
+
+
+        // @ts-ignore
+        medHeight = this.FindMedian(areaArray.map(p => p.height));
+        // @ts-ignore
+        medWidth = this.FindMedian(areaArray.map(p => p.width));
+        // @ts-ignore
+        areaArray = areaArray.sort((a, b) => {
+            if (a.rectO.x() < b.rectO.x()) {
+                return -1;
+            }
+            if (a.rectO.x() > b.rectO.x()) {
+                return 1;
+            }
+            return 0;
+        });
+        let r = true;
+        for (let i = 0; i < areaArray.length; i++) {
+            // if (areaArray[i].rectO.height() > 150 || areaArray[i].rectO.width() > 150) {
+            let contourIndex = areaArray[i].i;
+            let contour = contours.get(contourIndex);
+            let roiF = this.boundingRect(contour);
+            console.log(i + 'widht:' + roiF.width());
+            console.log(i + 'height:' + roiF.height());
+            let mask = this.CreateMatZero(orig_image.size(), org.bytedeco.opencv.global.opencv_core.CV_8UC1);
+            this.drawContours(mask, contours, contourIndex, new org.bytedeco.opencv.opencv_core.Scalar(255, 255, 255, 255), LineTypes.FILLED);
+
+            let contoursF = this.CreateMatVector();
+            let hierarchyF = this.CreateMat();
+            let op = this.CreateMat();
+            orig_image.copyTo(op, mask);
+            this.processImageForFindContour(op);
+            this.findContours(op, contoursF, hierarchyF, RetrievalModes.RETR_EXTERNAL, ContourApproximationModes.CHAIN_APPROX_NONE);
+            let rectArray = [];
+            for (let i = 0; i < contoursF.size(); i++) {
+                let mask1 = this.CreateMatZero(orig_image.size(), org.bytedeco.opencv.global.opencv_core.CV_8UC1);
+                let contour = contoursF.get(i);
+                let rect = this.boundingRect(contour);
+                r = !r;
+                // this.drawContours(mask1, contoursF, i, new org.bytedeco.opencv.opencv_core.Scalar(255, 255, 255, 255), LineTypes.FILLED);
+
+                // this.bitwise_not(mask1, mask1);
+                let greenBuffer = java.nio.DoubleBuffer.wrap([0.0, 255.0, 0.0, 255]);
+                let redBuffer = java.nio.DoubleBuffer.wrap([255.0, 0.0, 0.0, 255]);
+                let dst = this.CreateMat();
+                debugger;
+                this.CreateMatFromRect(orig_image, rect).copyTo(dst);
+                dst = this.convertGray(dst);
+                dst.apply(this.CreateRange(0, dst.size().height() - 1), this.CreateRange(0, dst.size().width() - 1))
+                    .copyTo(mask1.apply(this.CreateRange(rect.y(), rect.y() + dst.size().height() - 1), this.CreateRange(rect.x(), rect.x() + dst.size().width() - 1)));
+
+                main_image1.setTo(new org.bytedeco.opencv.opencv_core.Mat(4, 1, org.bytedeco.opencv.global.opencv_core.CV_64FC1, new org.bytedeco.javacpp.DoublePointer(r ? greenBuffer : redBuffer)), mask1);
+                // return fromNativeSource(this.MatToImage(main_image1));
+            }
+            mask.release();
+            releaseNativeObject(mask);
+        }
+        main_image.release();
+        orig_image.release();
+        hierarchy.release();
+
+        releaseNativeObject(main_image);
+        releaseNativeObject(orig_image);
+        releaseNativeObject(hierarchy);
+        releaseNativeObject(contours);
+        // @ts-ignore
+        return fromNativeSource(this.MatToImage(main_image1));
+    }
+
+    convertGray(main_image) {
+        this.cvtColor(main_image, main_image, ColorConversionCodes.COLOR_RGB2GRAY);
+        let dst = new org.bytedeco.opencv.opencv_core.Mat(main_image.size(), main_image.type());
+        this.bitwise_not(main_image, main_image);
+        let low = new org.bytedeco.opencv.opencv_core.Mat(1, 1, org.bytedeco.opencv.global.opencv_core.CV_32SC4, new org.bytedeco.opencv.opencv_core.Scalar(0, 0, 200, 0));
+        let high = new org.bytedeco.opencv.opencv_core.Mat(1, 1, org.bytedeco.opencv.global.opencv_core.CV_32SC4, new org.bytedeco.opencv.opencv_core.Scalar(180, 20, 255, 0));
+
+        org.bytedeco.opencv.global.opencv_core.inRange(main_image, low, high, dst);
+
+        // this.threshold(dst, dst, 0, 255, ThresholdTypes.THRESH_BINARY);
+        return dst;
     }
 
     get28X28(orig_image, mask1, roiF, size28_28) {
@@ -291,11 +479,11 @@ export class OpenCV extends CommanOpenCV {
             g: 0,
             b: 0
         });
-        if (size == roiF.height()) {
+        if (size === roiF.height()) {
             let x = (size - roiF.width()) / 2;
             croppedImage.apply(this.CreateRange(0, croppedImage.size().height() - 1), this.CreateRange(0, croppedImage.size().width() - 1))
                 .copyTo(resizeImage.apply(this.CreateRange(0, 0 + croppedImage.size().height() - 1), this.CreateRange(x, x + croppedImage.size().width() - 1)));
-        } else if (size == roiF.width()) {
+        } else if (size === roiF.width()) {
             let y = (size + 0 - roiF.height()) / 2;
             croppedImage.apply(this.CreateRange(0, croppedImage.size().height() - 1), this.CreateRange(0, croppedImage.size().width() - 1))
                 .copyTo(resizeImage.apply(this.CreateRange(y, y + croppedImage.size().height() - 1), this.CreateRange(0, 0 + croppedImage.size().width() - 1)));
@@ -321,26 +509,26 @@ export class OpenCV extends CommanOpenCV {
             y: 5
         }, 0.0, 0.0, BorderTypes.BORDER_DEFAULT);
 
-        this.threshold(main_image, main_image, 0, 255, ThresholdTypes.THRESH_OTSU)
+        this.threshold(main_image, main_image, 0, 255, ThresholdTypes.THRESH_OTSU);
     }
 
     getMostOuterBox(rectArray) {
 
-        var rect = rectArray.reduce(this.unionRect)
-        // x = min(a[0], b[0])
-        // y = min(a[1], b[1])
-        // w = max(a[0]+a[2], b[0]+b[2]) - x
-        // h = max(a[1]+a[3], b[1]+b[3]) - y
+        let rect = rectArray.reduce(this.unionRect);
         return rect;
 
     }
 
     unionRect(a, b) {
         debugger;
-        let x = Math.min(a.x(), b.x())
-        let y = Math.min(a.y(), b.y())
-        let w = Math.max(a.x() + a.width(), b.x() + b.width()) - x
-        let h = Math.max(a.y() + a.height(), b.y() + b.height()) - y
+        // @ts-ignore
+        let x = Math.min(a.x(), b.x());
+        // @ts-ignore
+        let y = Math.min(a.y(), b.y());
+        // @ts-ignore
+        let w = Math.max(a.x() + a.width(), b.x() + b.width()) - x;
+        // @ts-ignore
+        let h = Math.max(a.y() + a.height(), b.y() + b.height()) - y;
         return new org.bytedeco.opencv.opencv_core.Rect(x, y, w, h);
     }
 
@@ -401,8 +589,8 @@ export class OpenCV extends CommanOpenCV {
         // size of 1 geometry plane
         let W = geometry.cols();
         let H = geometry.rows() / 5;
-        //System.out.println(geometry);
-        //System.out.println(scores);
+        // System.out.println(geometry);
+        // System.out.println(scores);
 
         let detections;
         for (let y = 0; y < H; ++y) {
@@ -419,7 +607,9 @@ export class OpenCV extends CommanOpenCV {
                     let offsetX = x * 4.0;
                     let offsetY = y * 4.0;
                     let angle = anglesData.get(0, x)[0];
+                    // @ts-ignore
                     let cosA = Math.cos(angle);
+                    // @ts-ignore
                     let sinA = Math.sin(angle);
                     let x0 = x0Data.get(0, x)[0];
                     let x1 = x1Data.get(0, x)[0];
@@ -430,6 +620,7 @@ export class OpenCV extends CommanOpenCV {
                     let offset = new org.bytedeco.opencv.opencv_core.Point(offsetX + cosA * x1 + sinA * x2, offsetY - sinA * x1 + cosA * x2);
                     let p1 = new org.bytedeco.opencv.opencv_core.Point(-1 * sinA * h + offset.x, -1 * cosA * h + offset.y);
                     let p3 = new org.bytedeco.opencv.opencv_core.Point(-1 * cosA * w + offset.x, sinA * w + offset.y); // original trouble here !
+                    // @ts-ignore
                     let r = new org.bytedeco.opencv.opencv_core.RotatedRect(new org.bytedeco.opencv.opencv_core.Point(0.5 * (p1.x + p3.x), 0.5 * (p1.y + p3.y)), new org.bytedeco.opencv.opencv_core.Size(w, h), -1 * angle * 180 / Math.PI);
                     detections.add(r);
                     confidences.add(score);

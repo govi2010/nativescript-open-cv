@@ -15,12 +15,12 @@
     "nativescript-color-picker": "^1.6.0",
     "nativescript-drawingpad": "^3.1.0",
     "nativescript-open-cv": "file:../src",
-    "nativescript-theme-core": "~2.0.2",
-    "tns-core-modules": "~6.0.1"
+    "nativescript-theme-core": "~2.0.24",
+    "tns-core-modules": "~6.1.2"
   },
   "devDependencies": {
-    "nativescript-dev-webpack": "1.0.1",
-    "typescript": "3.4.5"
+    "nativescript-dev-webpack": "1.2.1",
+    "typescript": "3.6.4"
   },
   "gitHead": "8c1a4866a66daab09bf5ef8e5a96472687192373",
   "readme": "NativeScript Application"

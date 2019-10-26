@@ -1,7 +1,5 @@
 import {CommanOpenCV} from './open-cv.common';
-import {fromNativeSource, ImageSource} from "tns-core-modules/image-source";
-import {ios} from "tns-core-modules/utils/utils";
-import nsArrayToJSArray = ios.collections.nsArrayToJSArray;
+import {ImageSource} from "tns-core-modules/image-source";
 
 declare var OpenCVWrapper: any;
 declare var OpenCVMat: any, OPENCV_8UC4;
@@ -58,7 +56,7 @@ export class OpenCV extends CommanOpenCV {
 
     CreateMat() {
         // debugger;
-        return new OpenCVMat()
+        return new OpenCVMat();
     }
 
 
@@ -103,16 +101,19 @@ export class OpenCV extends CommanOpenCV {
         // throw new Error("Method not implemented.");
     }
 
-    toAll28X28Image(res: any): ImageSource[] {
+    toAll28X28Image(res: any): { img: ImageSource, rect }[] {
         let main_image = this.ImageToMat(res);
         let nsarray = main_image.toAll28X28Image();
-        return nsArrayToJSArray(nsarray).map(p => fromNativeSource(p));
+        // return nsArrayToJSArray(nsarray).map(p => fromNativeSource(p));
+        return null;
     }
 
     load() {
     }
 
-
+    ChangeColor(res, rect, result): any {
+        return null;
+    }
 }
 
 export {

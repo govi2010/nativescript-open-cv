@@ -10,11 +10,79 @@
 // create a file named before-plugins.gradle in the current directory and place it there
 
 android {
+ buildTypes {
+        release {
+            // Enables code shrinking, obfuscation, and optimization for only
+            // your project's release build type.
+            minifyEnabled true
+
+            // Enables resource shrinking, which is performed by the
+            // Android Gradle plugin.
+            shrinkResources true
+
+            // Includes the default ProGuard rules files that are packaged with
+            // the Android Gradle plugin. To learn more, go to the section about
+            // R8 configuration files.
+            proguardFiles getDefaultProguardFile(
+                    'proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+                    }
+    }
+    packagingOptions {
+              exclude '**/ffmpeg'
+              exclude '**/ffprobe'
+              exclude '**/*.h'
+              exclude '**/*.hpp'
+              exclude '**/*.pc'
+              exclude '**/*.txt'
+              exclude '**/*.md'
+              exclude '**/*.ilmbase'
+              exclude '**/*.openexr'
+              exclude '**/*.patch'
+              exclude '**/*.supp'
+              exclude '**/*.mk'
+              exclude '**/*.cmake'
+              exclude '**/*.jar'
+              exclude '**/*.BSD'
+              exclude '**/*.GPL'
+              exclude '**/*COPYRIGHT'
+              exclude '**/*.ijg'
+              exclude '**/cmake/**/*.*'
+              exclude '**/*copyright'
+              exclude 'META-INF/DEPENDENCIES'
+              exclude '**/*LICENSE'
+              exclude '**/*README'
+              exclude 'META-INF/LICENSE.txt'
+              exclude 'META-INF/license.txt'
+              exclude 'META-INF/NOTICE'
+              exclude 'META-INF/NOTICE.txt'
+              exclude 'META-INF/notice.txt'
+              exclude 'META-INF/ASL2.0'
+          }
   defaultConfig {
     minSdkVersion 17
     generatedDensities = []
+     multiDexEnabled true
+        ndk {
+                     abiFilters.clear()
+            }
   }
   aaptOptions {
     additionalParameters "--no-version-vectors"
   }
+}
+
+def settingsGradlePath
+
+if(project.hasProperty("appResourcesPath")){
+    settingsGradlePath = "$project.appResourcesPath/Android/settings.gradle";
+} else {
+    settingsGradlePath = "$rootDir/../../app/App_Resources/Android/settings.gradle";
+}
+
+def settingsGradleFile = new File(settingsGradlePath);
+
+if(settingsGradleFile.exists())
+{
+    apply from: settingsGradleFile;
 }

@@ -1,22 +1,10 @@
 import {Observable} from "tns-core-modules/data/observable";
 import {Page} from 'tns-core-modules/ui/page';
 import {Slider} from 'tns-core-modules/ui/slider';
-import {fromNativeSource} from 'tns-core-modules/image-source/image-source';
 import {ColorPicker} from 'nativescript-color-picker';
 import {DrawingPad} from 'nativescript-drawingpad';
-import {
-    AdaptiveThresholdTypes,
-    BorderTypes,
-    ColorConversionCodes,
-    ContourApproximationModes,
-    InterpolationFlags,
-    OpenCV,
-    RetrievalModes,
-    ThresholdTypes
-} from "nativescript-open-cv";
-import {isIOS} from "tns-core-modules/platform";
-import {ios} from "tns-core-modules/utils/utils";
-import nsArrayToJSArray = ios.collections.nsArrayToJSArray;
+import {OpenCV} from "nativescript-open-cv";
+import {fromNativeSource} from "tns-core-modules/image-source";
 
 declare var OPENCV_8UC4, OpenCVMat;
 
@@ -27,7 +15,7 @@ declare const android: any;
 export class HomeViewModel extends Observable {
     public penWidth = 14;
     public prediction = '';
-    public penColor = '#000000';
+    public penColor = '#0000FF';
     OpenCv: OpenCV;
     private _myDrawingPad: DrawingPad;
     private _widthSlider: Slider;
@@ -55,16 +43,15 @@ export class HomeViewModel extends Observable {
             // return res;
             debugger;
             let main_image = this.OpenCv.toAll28X28Image(res);
-            return main_image
+            return main_image;
 
         } catch (r) {
-            console.log(r)
+            console.log(r);
         }
 
     }
 
     public getMyDrawing() {
-
         this._myDrawingPad.getDrawingSvg().then(res => {
             console.log(res);
         });
@@ -74,19 +61,20 @@ export class HomeViewModel extends Observable {
             let bit = this.get_contours(res);
             this.set('prediction', "");
             // const image = fromNativeSource(bit);
-            this.set('drawingImage', bit);
-            // const imageBase64 = image.toBase64String('jpeg');
-            // request({
-            //     url: "http://192.168.1.6:5001/api/test",
-            //     method: "POST",
-            //     headers: {"Content-Type": "application/json"},
-            //     content: JSON.stringify({image: imageBase64})
-            // }).then((response) => {
-            //     const result = response.content.toJSON();
-            //     console.log(result);
-            //     this.set('prediction', result);
-            // }, (e) => {
-            // });
+            // let img = (this.OpenCv as any).ApplyResultOnImage(res);
+            // bit.push(img);
+
+
+            // (this._myDrawingPad as any).nativeElement.android.setSignatureBitmap(img.android);
+            let r = false;
+
+            bit.forEach((i: any) => {
+                res = this.OpenCv.ChangeColor(res, i.rect, r);
+                r = !r;
+            });
+            bit.push({img: fromNativeSource(res), rect: null});
+            // bit.push({img: fromNativeSource(res), rect: null});
+            this.set('drawingImage', bit.map((p: any) => p.img));
             console.log('trying to set image');
             // this.set('drawingImage', image);
         });
