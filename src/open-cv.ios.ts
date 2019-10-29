@@ -1,5 +1,6 @@
 import {CommanOpenCV} from './open-cv.common';
-import {ImageSource} from "tns-core-modules/image-source";
+import {fromNativeSource, ImageSource} from "tns-core-modules/image-source";
+
 
 declare var OpenCVWrapper: any;
 declare var OpenCVMat: any, OPENCV_8UC4;
@@ -101,18 +102,54 @@ export class OpenCV extends CommanOpenCV {
         // throw new Error("Method not implemented.");
     }
 
-    toAll28X28Image(res: any): { img: ImageSource, rect }[] {
+    toAll28X28Image(res: any): { img: ImageSource, rect, x, y, height, width }[] {
         let main_image = this.ImageToMat(res);
+        debugger;
         let nsarray = main_image.toAll28X28Image();
-        // return nsArrayToJSArray(nsarray).map(p => fromNativeSource(p));
-        return null;
+
+        let s = this.nsArrayToJSArray(nsarray);
+        s.forEach((p: { img, rect, x, y, height, width }) => {
+            p.img = fromNativeSource(p.img);
+        });
+        return s;
+    }
+
+    nsArrayToJSArray(a: NSArray<any>): Array<{ img: ImageSource, rect, x, y, height, width }> {
+        const arr = [];
+        if (a !== undefined) {
+            let count = a.count;
+            for (let i = 0; i < count; i++) {
+                let dict = a.objectAtIndex(i);
+                var result = {};
+
+                result['x'] = dict.objectForKey('x');
+                result['y'] = dict.objectForKey('y');
+                result['height'] = dict.objectForKey('height');
+                result['width'] = dict.objectForKey('width');
+                result['img'] = dict.objectForKey('img');
+
+                arr.push(result);
+            }
+        }
+
+        return arr;
     }
 
     load() {
     }
 
-    ChangeColor(res, rect, result): any {
+    ChangeColor(res, rect, x, y, height, width, result): any {
+        let main_image = this.ImageToMat(res);
+        try {
+            let nsarray = main_image.changeColorYHeightWidthResult(x, y, height, width, result);
+
+            return nsarray;
+        } catch (e) {
+            debugger;
+            console.log(e);
+        }
         return null;
+
     }
 }
 

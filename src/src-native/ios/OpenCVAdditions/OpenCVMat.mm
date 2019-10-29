@@ -156,6 +156,33 @@
   }
   return nil;
 }
+
+-(UIImage*)changeColor:(int)x y:(int)y height:(int)height width:(int)width result:(bool)result{
+    cv::Mat matInput;
+    (_mat).copyTo(matInput);
+    cv::Rect outerRect = cv::Rect(x, y, width, height);
+    
+
+    cv::Mat mask1 = cv::Mat::zeros(matInput.size(),CV_8UC1);
+    cv::Mat croppedImage;
+    cv::Mat(matInput, outerRect).copyTo(croppedImage);
+    cv::cvtColor(croppedImage,croppedImage,cv::COLOR_BGR2GRAY);
+    cv::bitwise_not(croppedImage, croppedImage);
+    cv::Scalar color;
+    if(result){
+        color = cv::Scalar(0,255,0,255);
+    }else {
+        color = cv::Scalar(255,0,0,255);
+    }
+   
+    cv::threshold(croppedImage, croppedImage, 0,255, cv::THRESH_BINARY);
+   
+    croppedImage(cv::Range(0, croppedImage.size().height-1), cv::Range(0, croppedImage.size().width-1))
+    .copyTo(mask1(cv::Range(y, y+ croppedImage.size().height-1), cv::Range(x, x + croppedImage.size().width-1)));
+    matInput.setTo(color,mask1);
+    NSLog(@"heightMedian %d  widthMedian: %d ", matInput.size().height, matInput.size().width);
+    return [OpenCVWrapper UIImageFromCVMat:matInput];
+}
 -(NSArray*)toAll28X28Image{
     cv::Mat matInput;
     (_mat).copyTo(matInput);
@@ -194,7 +221,7 @@
     int highheightMiddle = ceil((heightArray.size() - 1) / 2);
     int heightMedian = (heightArray[lowheightMiddle] + heightArray[highheightMiddle]) / 2;
     
-     NSMutableArray *images = [[NSMutableArray alloc] init];
+    NSMutableArray *images = [[NSMutableArray alloc] init];
     cv::Mat rect_kernel =  cv::getStructuringElement(cv::MORPH_CROSS, cv::Size(1, (heightMedian* 2)/3));
     cv::dilate(matInput,matInput, rect_kernel);
     NSLog(@"heightMedian %d  widthMedian: %d ", heightMedian, widthMedian);
@@ -207,7 +234,7 @@
         std::vector<cv::Point> contour=contoursF.at(i);
         cv::Rect roi= cv::boundingRect(contour);
         int area= cv::contourArea(contour);
-        [d addObject:@{@"x":@(roi.x),@"y": @(roi.y) , @"width": @(roi.width) , @"height" :@(roi.height) , @"area":@(area), @"i":@(i) }];
+        [d addObject:@{@"x":@(roi.x),@"y": @(roi.y) , @"width": @(roi.width) , @"height" :@(roi.height) , @"area":@(area), @"i":@(i)}];
     }
     NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"x" ascending:YES];
     NSArray *sortedArray = [d sortedArrayUsingDescriptors:@[descriptor]];
@@ -281,7 +308,7 @@
         cv::Mat  size28_28  = cv::Mat(cv::Size(28,28),resizeImage.type(),cv::Scalar(0,0,0,0));
             size23_23(cv::Range(0, 23), cv::Range(0, 23))
             .copyTo(size28_28(cv::Range(3, 3 + 23), cv::Range(3, 3 + 23)));
-        [images addObject:[OpenCVWrapper UIImageFromCVMat:size28_28]];
+        [images addObject:@{@"x":@(outerRect.x),@"y": @(outerRect.y) , @"width": @(outerRect.width) , @"height" :@(outerRect.height) ,@"img":[OpenCVWrapper UIImageFromCVMat:size28_28]}];
         croppedImage.release();
         size28_28.release();
         size23_23.release();

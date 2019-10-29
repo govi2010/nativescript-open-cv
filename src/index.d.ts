@@ -33,9 +33,9 @@ export declare class OpenCV {
 
     resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: number): void;
 
-    toAll28X28Image(res: any):  { img: ImageSource, rect }[];
+    toAll28X28Image(res: any): { img: ImageSource, rect, x, y, height, width }[];
 
-    ChangeColor(res, rect, result): any;
+    ChangeColor(res, rect, x, y, height, width, result): any;
 
     load();
 }

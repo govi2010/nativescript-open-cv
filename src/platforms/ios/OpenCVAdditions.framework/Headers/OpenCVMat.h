@@ -24,6 +24,7 @@
 -(void)releaseMat;
 -(UIImage*)toImage;
 -(UIImage*)to28X28Image;
+-(UIImage*)changeColor:(int)x y:(int)y height:(int)height width:(int)width result:(bool)result;
 -(NSArray*)toAll28X28Image;
 -(void)setTo:(UIColor*)color;
 -(OpenCVMat*)clone;

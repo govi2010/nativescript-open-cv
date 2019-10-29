@@ -168,7 +168,7 @@ export class OpenCV extends CommanOpenCV {
         return median;
     }
 
-    toAll28X28Image(res): { img: ImageSource, rect }[] {
+    toAll28X28Image(res): { img: ImageSource, rect, x, y, height, width }[] {
 
         let images = [];
         console.log("this is more cool.");
@@ -287,21 +287,20 @@ export class OpenCV extends CommanOpenCV {
         releaseNativeObject(hierarchy);
         releaseNativeObject(contours);
         // @ts-ignore
-        images.forEach((p: { img, rect }) => {
+        images.forEach((p: { img, rect, x, y, height, width }) => {
             p.img = fromNativeSource(p.img);
         });
         return images;
 
     }
 
-    ChangeColor(res, rect, result): any {
+    ChangeColor(res, rect, x, y, height, width, result): any {
         let main_image1 = this.ImageToMat(res);
         // let main_image = this.ImageToMat(res);
         let greenBuffer = java.nio.DoubleBuffer.wrap([0.0, 255.0, 0.0, 255]);
         let redBuffer = java.nio.DoubleBuffer.wrap([255.0, 0.0, 0.0, 255]);
         let mask1 = this.CreateMatZero(main_image1.size(), org.bytedeco.opencv.global.opencv_core.CV_8UC1);
         let dst = this.CreateMat();
-        debugger;
         this.CreateMatFromRect(main_image1, rect).copyTo(dst);
         dst = this.convertGray(dst);
         this.bitwise_not(dst, dst);

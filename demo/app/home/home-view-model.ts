@@ -4,6 +4,7 @@ import {Slider} from 'tns-core-modules/ui/slider';
 import {ColorPicker} from 'nativescript-color-picker';
 import {DrawingPad} from 'nativescript-drawingpad';
 import {OpenCV} from "nativescript-open-cv";
+import {isIOS} from "tns-core-modules/platform";
 import {fromNativeSource} from "tns-core-modules/image-source";
 
 declare var OPENCV_8UC4, OpenCVMat;
@@ -65,14 +66,26 @@ export class HomeViewModel extends Observable {
             // bit.push(img);
 
 
-            // (this._myDrawingPad as any).nativeElement.android.setSignatureBitmap(img.android);
             let r = false;
+            if (isIOS) {
+                bit.forEach((i: any) => {
+                    res = this.OpenCv.ChangeColor(res, i.rect, i.x, i.y, i.height, i.width, r);
+                    r = !r;
+                });
+            } else {
+                bit.forEach((i: any) => {
+                    res = this.OpenCv.ChangeColor(res, i.rect, i.x, i.y, i.height, i.width, r);
+                    r = !r;
+                });
+            }
 
-            bit.forEach((i: any) => {
-                res = this.OpenCv.ChangeColor(res, i.rect, r);
-                r = !r;
-            });
-            bit.push({img: fromNativeSource(res), rect: null});
+            bit.push({img: fromNativeSource(res), rect: null, x: 0, y: 0, height: 0, width: 0});
+            try {
+                // (this._myDrawingPad as any).android.setSignatureBitmap(res);
+
+            } catch (e) {
+                debugger;
+            }
             // bit.push({img: fromNativeSource(res), rect: null});
             this.set('drawingImage', bit.map((p: any) => p.img));
             console.log('trying to set image');

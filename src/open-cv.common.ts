@@ -33,9 +33,9 @@ export abstract class CommanOpenCV {
 
     abstract resize(srcMat: any, destMat: any, size: any, x: number, y: number, method: number): void;
 
-    abstract toAll28X28Image(res: any): { img: ImageSource, rect }[];
+    abstract toAll28X28Image(res: any): { img: ImageSource, rect, x, y, height, width }[];
 
-    abstract ChangeColor(res, rect, result): any;
+    abstract ChangeColor(res, rect, x, y, height, width, result): any;
 
     abstract load();
 
